@@ -26,3 +26,4 @@ class VideoGenerationTest(LiveServerTestCase):
         self.assertEqual(result.get("status"), "pending")
 
         print("Test Passed! Video generation job started successfully.")
+        
