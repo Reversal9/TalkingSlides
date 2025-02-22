@@ -173,3 +173,15 @@ def get_video(request, filename):
     response = StreamingHttpResponse(file, content_type="video/mp4")
     response["Content-Disposition"] = f'inline; filename="{filename}"'
     return response
+
+def list_videos(request):
+    videos = VideoMetadata.objects.all()
+    data = [
+        {
+            "filename": video.filename,
+            "thumbnail": video.thumbnail.url if video.thumbnail else None
+        }
+        for video in videos
+    ]
+    return JsonResponse(data, safe=False)
+
