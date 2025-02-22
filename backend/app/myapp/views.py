@@ -193,12 +193,12 @@ def list_videos(request):
     data = [
         {
             "title": video.title,
+            "file_id": video.file_id,
             "thumbnail": video.thumbnail.url if video.thumbnail else None
         }
         for video in videos
     ]
     return JsonResponse(data, safe=False)
-
 
 
 @csrf_exempt
