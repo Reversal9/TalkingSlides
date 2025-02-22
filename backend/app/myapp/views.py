@@ -297,18 +297,23 @@ def delete_video(request, video_id):
     return HttpResponse("video deleted successfully!")
 
 @csrf_exempt
-def upload_pdf_and_ask(request):
+def upload_pdf_and_ask(request, file_id):
     """
     Uploads a PDF to OpenAI, attaches it to an assistant, and sends a prompt to get a response.
     """
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
+    try:
+        # Convert file_id string to ObjectId
+        file_id = ObjectId(file_id)
+    except Exception:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
 
-    if "pdf" not in request.FILES or "prompt" not in request.POST:
-        return JsonResponse({"error": "Missing file or prompt"}, status=400)
+    # Retrieve the file from GridFS
+    pdf_file = fs.find_one({"_id": file_id})
 
-    pdf_file = request.FILES["pdf"]
-    user_prompt = request.POST["prompt"]
+    if not file:
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    user_prompt = request.POST.get("prompt")
 
     try:
         # Step 1: Upload the file to OpenAI's storage
