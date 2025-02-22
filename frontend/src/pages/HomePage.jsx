@@ -33,6 +33,8 @@ const HomePage = ({ setFirstPageVisited }) => {
             {!isAuthenticated && (
                 <button onClick={() => loginWithRedirect()}>Login</button>
             )}
+            <div>
+            </div>
         </div>
     );
 };
