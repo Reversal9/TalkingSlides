@@ -16,9 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from .views import get_message
+from . import views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('message/', get_message, name='get_message'),
+    path('message/', views.get_message, name='get_message'),
+    path("login", views.login, name="login"),
+    path("logout", views.logout, name="logout"),
+    path("callback", views.callback, name="callback"),
 ]
