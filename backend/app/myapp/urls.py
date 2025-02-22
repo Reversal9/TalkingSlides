@@ -14,4 +14,5 @@ urlpatterns = [
     path("logout", views.logout, name="logout"),
     path("callback", views.callback, name="callback"),
     path('', index, name='index'),
+    path('webhook/', views.webhook_handler, name='webhook'),
 ]

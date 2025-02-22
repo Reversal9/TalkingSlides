@@ -14,6 +14,7 @@ from django.conf import settings
 from django.shortcuts import redirect, render, redirect
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
+import 
 
 @api_view(['GET'])
 def get_message(request):
@@ -136,3 +137,37 @@ def logout(request):
             quote_via=quote_plus,
         ),
     )
+
+def webhook_handler(request):
+    if (request.method != "POST"): 
+        return Response({"message": "Webhook received successfully"}, status=status.HTTP_200_OK)
+    payload = json.loads(request.body)
+    event = payload.get("event")
+    
+    if (event == "SUCCESS"):
+        return Response({"message" : "processing completed successfully."})
+    else:
+        return Response({"message": "processing failed."})
+'''
+@app.post("/compile_video/")
+async def compile_video_endpoint(
+    pdf_file: UploadFile = File(...), 
+    speech_path: str = Form(...),
+    vid_path: str = Form(...),
+    webhook_url: str = Form(...),
+    background_tasks: BackgroundTasks
+):
+    try:
+        # Save the uploaded PDF file temporarily
+        pdf_filename = os.path.join(TEMP_DIR, pdf_file.filename)
+        with open(pdf_filename, "wb") as f:
+            shutil.copyfileobj(pdf_file.file, f)
+
+        # Run the video compilation in the background
+        background_tasks.add_task(compile_video, pdf_filename, speech_path, vid_path, webhook_url)
+
+        return JSONResponse({"message": "Video compilation started successfully. You will be notified when it's done."}, status_code=200)
+    
+    except Exception as e:
+        return JSONResponse({"error": str(e)}, status_code=500)
+'''
