@@ -21,6 +21,10 @@ from urllib.parse import quote_plus, urlencode
 import os
 from bson import ObjectId
 import openai
+# from pdfminer.high_level import extract_text
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from dotenv import load_dotenv
 
 @api_view(['GET'])
 def get_message(request):
@@ -405,3 +409,35 @@ def text_to_speech(request):
     except Exception as e:
         print("Error generating speech:", str(e))
         return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
+
+# # Load environment variables
+# load_dotenv()
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# @api_view(['POST'])
+# def generate_text(request):
+#     if 'pdf' not in request.FILES:
+#         return JsonResponse({"error": "No PDF uploaded"}, status=400)
+
+#     pdf_file = request.FILES['pdf']
+#     file_path = default_storage.save(pdf_file.name, ContentFile(pdf_file.read()))
+
+#     try:
+#         extracted_text = extract_text(file_path)
+#         os.remove(file_path)  # Clean up file
+
+#         prompt = f"Summarize this document:\n\n{extracted_text}"
+        
+#         response = openai.ChatCompletion.create(
+#             model="gpt-4",
+#             messages=[{"role": "system", "content": "You are an AI summarization assistant."},
+#                       {"role": "user", "content": prompt}],
+#             max_tokens=500
+#         )
+
+#         generated_text = response["choices"][0]["message"]["content"]
+
+#         return JsonResponse({"generated_text": generated_text})
+
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)
