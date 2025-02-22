@@ -1,11 +1,20 @@
 from pathlib import Path
 from openai import OpenAI
 
-client = OpenAI()
-speech_file_path = Path(__file__).parent / "speech.mp3"
-response = client.audio.speech.create(
-    model="tts-1",
-    voice="alloy",
-    input="Today is a wonderful day to build something people love!",
-)
-response.stream_to_file(speech_file_path)
+
+def add_voice(input_script, speech_file_path, voice):
+    voice_options = ["alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer"]
+    if not (voice in voice_options):
+        voice_opt = "alloy"
+    else:
+        voice_opt = voice 
+      
+    client = OpenAI()
+    response = client.audio.speech.create(
+        model="tts-1",
+        voice=voice_opt,
+        input=input_script,
+    )
+    response.stream_to_file(speech_file_path)
+    
+
