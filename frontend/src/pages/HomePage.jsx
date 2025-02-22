@@ -1,17 +1,24 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MessageFetcher from "../components/MessageFetcher";
+import logo from "/src/assets/logo.PNG";
+import { useAuth0 } from "@auth0/auth0-react";
 
 const HomePage = ({ setFirstPageVisited }) => {
 
     const navigate = useNavigate();
-    const [username, setUsername] = useState(""); 
-    const [password, setPassword] = useState(""); 
+    const { loginWithRedirect, isAuthenticated, isLoading } = useAuth0();
 
     useEffect(() => {
         localStorage.setItem("firstPageVisited", "true");
         setFirstPageVisited(true);
-    }, [setFirstPageVisited]);
+
+        if (isAuthenticated) {
+            navigate("/dashboard"); // Redirect authenticated users to dashboard
+        }
+    }, [isAuthenticated, navigate, setFirstPageVisited]);
+
+    if (isLoading) return <h2>Loading...</h2>;
 
     return (
         <div>
@@ -22,6 +29,10 @@ const HomePage = ({ setFirstPageVisited }) => {
                 A webapp that allows you to better learn from lecture slides for lecture
                 that you missed!
             </p>
+
+            {!isAuthenticated && (
+                <button onClick={() => loginWithRedirect()}>Login</button>
+            )}
             <div>
                 <button onClick={() => navigate("/dashboard")} style={{ marginRight: "0.5rem" }}>
                 Log in

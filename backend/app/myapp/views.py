@@ -30,6 +30,46 @@ def get_message(request):
     """
     return Response({"message": "Hello, this is your message!"}, status=status.HTTP_200_OK)
 
+def upload_pdf(request):
+    """
+    View to handle PDF uploads via a form.
+    Renders a template with the upload form and saves the PDF upon submission.
+    """
+    if request.method == "POST":
+        form = PdfUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()  # The file is saved using GridFSStorage as defined in your model.
+            return HttpResponse("PDF uploaded successfully!")
+    else:
+        form = PdfUploadForm()
+    return render(request, 'upload_pdf.html', {'form': form})
+
+def view_pdf(request, pdf_id):
+    """
+    View to retrieve and stream a PDF file.
+    Args:
+        pdf_id: The primary key of the Pdf model instance.
+    Returns:
+        FileResponse streaming the PDF file with appropriate content type.
+    Raises:
+        Http404 if the PDF does not exist.
+    """
+    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
+    return FileResponse(pdf_instance.file, content_type='application/pdf')
+
+def delete_pdf(request, pdf_id):
+    """
+    View to delete a PDF file.
+    Removes the file from the storage (GridFS) and deletes the associated model instance.
+    Args:
+        pdf_id: The primary key of the Pdf model instance.
+    Returns:
+        HttpResponse confirming deletion.
+    """
+    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
+    pdf_instance.file.delete()  # Deletes the file from GridFSStorage.
+    pdf_instance.delete()       # Deletes the model instance from the database.
+    return HttpResponse("PDF deleted successfully!")
 
 oauth = OAuth()
 
@@ -37,35 +77,56 @@ oauth.register(
     "auth0",
     client_id=settings.AUTH0_CLIENT_ID,
     client_secret=settings.AUTH0_CLIENT_SECRET,
-    client_kwargs={
-        "scope": "openid profile email",
-    },
-    server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+    api_base_url="http://localhost:5173/",
+    access_token_url="http://localhost:5173/oauth/token",
+    authorize_url="http://localhost:5173/authorize",
+    client_kwargs={"scope": "openid profile email"},
 )
+
+# oauth.register(
+#     "auth0",
+#     client_id=settings.AUTH0_CLIENT_ID,
+#     client_secret=settings.AUTH0_CLIENT_SECRET,
+#     client_kwargs={
+#         "scope": "openid profile email",
+#     },
+#     server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+# )
 
 
 def index(request):
-
-    return render(
-        request,
-        "index.html",
-        context={
-            "session": request.session.get("user"),
-            "pretty": json.dumps(request.session.get("user"), indent=4),
-        },
-    )
-
+    return redirect("http://localhost:5173/")
+    # return render(
+        # request,
+        # "index.html",
+        # context={
+        #     "session": request.session.get("user"),
+        #     "pretty": json.dumps(request.session.get("user"), indent=4),
+        # },
+    # )
 
 def callback(request):
-    token = oauth.auth0.authorize_access_token(request)
-    request.session["user"] = token
-    return redirect(request.build_absolute_uri(reverse("index")))
-
+    try:
+        token = oauth.auth0.authorize_access_token(request)
+        user_info = oauth.auth0.parse_id_token(request, token)
+        request.session["user"] = user_info
+        return redirect("http://localhost:5173/dashboard")  # Redirect to React frontend
+    except Exception as e:
+        print("Auth0 callback error:", str(e))
+        return redirect("/") 
+    
+# def callback(request):
+#     token = oauth.auth0.authorize_access_token(request)
+#     request.session["user"] = token
+#     return redirect(request.build_absolute_uri(reverse("index")))
 
 def login(request):
-    return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri(reverse("callback"))
-    )
+    return oauth.auth0.authorize_redirect(request, request.build_absolute_uri("/callback"))
+
+# def login(request):
+#     return oauth.auth0.authorize_redirect(
+#         request, request.build_absolute_uri(reverse("callback"))
+#     )
 
 
 def logout(request):
