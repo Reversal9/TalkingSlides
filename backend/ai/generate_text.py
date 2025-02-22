@@ -1,6 +1,9 @@
 import pymupdf
 import openai
 from openai import OpenAI
+import os
+
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 system_prompt = """
 You are a helpful assistant. You will be provided with a document delimited by triple quotes.

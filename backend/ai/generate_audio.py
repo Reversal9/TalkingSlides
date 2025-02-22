@@ -1,6 +1,8 @@
 from pathlib import Path
 from openai import OpenAI
+import os
 
+client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 def add_voice(input_script, speech_file_path, voice):
     voice_options = ["alloy", "ash", "coral", "echo", "fable", "onyx", "nova", "sage", "shimmer"]
