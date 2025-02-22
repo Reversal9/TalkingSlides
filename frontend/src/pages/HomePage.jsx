@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import MessageFetcher from "../components/MessageFetcher";
+import logo from "/src/assets/logo.PNG";
 
 const HomePage = ({ setFirstPageVisited }) => {
 
@@ -14,6 +16,8 @@ const HomePage = ({ setFirstPageVisited }) => {
 
     return (
         <div>
+            <img src="/logo.PNG" alt="logo" style={{ maxWidth: "200px", marginBottom: "1rem" }}/>
+            {/* <MessageFetcher></MessageFetcher> */}
             <h1>Welcome to Talking Slides!</h1>
             <p>
                 A webapp that allows you to better learn from lecture slides for lecture
@@ -35,7 +39,7 @@ const HomePage = ({ setFirstPageVisited }) => {
             />
             <input
                 className="textinput"
-                type="text"
+                type="password"
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
