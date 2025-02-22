@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-
 const HomePage = ({ setFirstPageVisited }) => {
 
     const navigate = useNavigate();
@@ -11,7 +10,7 @@ const HomePage = ({ setFirstPageVisited }) => {
     useEffect(() => {
         localStorage.setItem("firstPageVisited", "true");
         setFirstPageVisited(true);
-      }, [setFirstPageVisited]);
+    }, [setFirstPageVisited]);
 
     return (
         <div>
