@@ -1,8 +1,13 @@
 #root {
+  display: flex;              /* Make it a flex container */
+  flex-direction: column;     /* Arrange children in a column */
+  align-items: center;        /* Center children horizontally */
+  justify-content: center;    /* Center children vertically */
   max-width: 1280px;
   margin: 0 auto;
   padding: 2rem;
   text-align: center;
+  min-height: 100vh; 
 }
 
 .logo {
