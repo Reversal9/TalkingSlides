@@ -17,6 +17,5 @@ urlpatterns = [
     path("api/upload/", views.upload_video, name="upload_video"),
     path("api/video/<str:file_id>/", views.get_video, name="get_video"),
     path("api/videos/", views.list_videos, name="list_videos"),
-    path("generate_text/<str:file_id>/", views.generate_text_from_pdf, name="generate_text"),
-
+    path("upload_pdf_and_ask/", views.upload_pdf_and_ask, name="generate_text"),
 ]

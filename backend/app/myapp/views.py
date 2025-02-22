@@ -297,40 +297,66 @@ def delete_video(request, video_id):
     return HttpResponse("video deleted successfully!")
 
 @csrf_exempt
-def generate_text_from_pdf(request, file_id):
+def upload_pdf_and_ask(request):
     """
-    API Endpoint: Extracts text from PDF stored in GridFS and generates AI response.
+    Uploads a PDF to OpenAI, attaches it to an assistant, and sends a prompt to get a response.
     """
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=400)
+
+    if "pdf" not in request.FILES or "prompt" not in request.POST:
+        return JsonResponse({"error": "Missing file or prompt"}, status=400)
+
+    pdf_file = request.FILES["pdf"]
+    user_prompt = request.POST["prompt"]
+
     try:
-        file_id = ObjectId(file_id)
-    except Exception:
-        return JsonResponse({"error": "Invalid file ID"}, status=400)
+        # Step 1: Upload the file to OpenAI's storage
+        openai.api_key = OPENAI_API_KEY
+        response = openai.files.create(
+            file=pdf_file,
+            purpose="assistants"
+        )
+        file_id = response["id"]
 
-    file = fs.find_one({"_id": file_id})
-    
-    if not file:
-        return JsonResponse({"error": "File not found"}, status=404)
+        # Step 2: Create an assistant (if not created already)
+        assistant = openai.beta.assistants.create(
+            name="PDF Assistant",
+            instructions="Use the uploaded PDF to answer user queries.",
+            model="gpt-4-turbo",
+            file_ids=[file_id]  # Attach the PDF
+        )
 
-    # Read PDF from GridFS
-    pdf_data = file.read()
-    
-    # Extract text using PyMuPDF
-    doc = fitz.open(stream=pdf_data, filetype="pdf")
-    pdf_text = "\n".join([page.get_text("text") for page in doc])
+        # Step 3: Create a thread
+        thread = openai.beta.threads.create()
 
-    if not pdf_text.strip():
-        return JsonResponse({"error": "No text found in PDF"}, status=400)
+        # Step 4: Send the prompt as a message in the thread
+        message = openai.beta.threads.messages.create(
+            thread_id=thread.id,
+            role="user",
+            content=user_prompt
+        )
 
-    # Generate AI Response using OpenAI
-    openai.api_key = settings.OPENAI_API_KEY
-    response = openai.ChatCompletion.create(
-        model="gpt-4",
-        messages=[
-            {"role": "system", "content": "You are an AI that summarizes and generates insights from PDF content."},
-            {"role": "user", "content": f"Summarize and analyze the following document:\n{pdf_text}"},
-        ],
-    )
+        # Step 5: Run the assistant
+        run = openai.beta.threads.runs.create(
+            thread_id=thread.id,
+            assistant_id=assistant.id
+        )
 
-    generated_text = response["choices"][0]["message"]["content"]
+        # Wait for the assistant to process the request
+        import time
+        while run.status != "completed":
+            time.sleep(2)
+            run = openai.beta.threads.runs.retrieve(
+                thread_id=thread.id,
+                run_id=run.id
+            )
 
-    return JsonResponse({"generated_text": generated_text})
+        # Step 6: Retrieve the assistant's response
+        messages = openai.beta.threads.messages.list(thread_id=thread.id)
+        response_text = messages.data[0].content
+
+        return JsonResponse({"response": response_text})
+
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=500)
