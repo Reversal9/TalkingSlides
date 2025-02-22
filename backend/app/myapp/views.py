@@ -3,6 +3,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, FileResponse, Http404
 from rest_framework.decorators import api_view
+from django.views.decorators.csrf import csrf_exempt
 from rest_framework.response import Response
 from rest_framework import status
 from .forms import PdfUploadForm
