@@ -1,5 +1,7 @@
 # TalkingSlides
 
+![Alt text](frontend/public/logo.PNG)
+
 ## Inspiration  
 In an era where access to quality education is more crucial than ever, we recognized a gap in how students review lecture materials when they miss class. Whether due to unforeseen circumstances, emergencies, or scheduling conflicts, students often struggle to catch up on missed lectures effectively. Our team was inspired to create a tool that transforms static lecture slides into engaging video lectures, ensuring that no student is left behind in their learning journey.  
 
