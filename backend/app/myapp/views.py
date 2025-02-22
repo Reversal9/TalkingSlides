@@ -30,60 +30,6 @@ def get_message(request):
     """
     return Response({"message": "Hello, this is your message!"}, status=status.HTTP_200_OK)
 
-def upload_pdf(request):
-    """
-    View to handle PDF uploads via a form.
-    Renders a template with the upload form and saves the PDF upon submission.
-    """
-    if request.method == "POST":
-        form = PdfUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()  # The file is saved using GridFSStorage as defined in your model.
-            return HttpResponse("PDF uploaded successfully!")
-    else:
-        form = PdfUploadForm()
-    return render(request, 'upload_pdf.html', {'form': form})
-
-def view_pdf(request, pdf_id):
-    """
-    View to retrieve and stream a PDF file.
-    Args:
-        pdf_id: The primary key of the Pdf model instance.
-    Returns:
-        FileResponse streaming the PDF file with appropriate content type.
-    Raises:
-        Http404 if the PDF does not exist.
-    """
-    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
-    return FileResponse(pdf_instance.file, content_type='application/pdf')
-
-def delete_pdf(request, pdf_id):
-    """
-    View to delete a PDF file.
-    Removes the file from the storage (GridFS) and deletes the associated model instance.
-    Args:
-        pdf_id: The primary key of the Pdf model instance.
-    Returns:
-        HttpResponse confirming deletion.
-    """
-    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
-    pdf_instance.file.delete()  # Deletes the file from GridFSStorage.
-    pdf_instance.delete()       # Deletes the model instance from the database.
-    return HttpResponse("PDF deleted successfully!")
-
-def delete_video(request, video_id):
-    """
-    View to delete a video file.
-    Removes the file from the storage (GridFS) and deletes the associated model instance.
-    Args:
-        video_id: The primary key of the video model instance.
-    Returns:
-        HttpResponse confirming deletion.
-    """
-    video_instance = get_object_or_404(VideoMetadata, id=video_id)
-    video_instance.file.delete()  # Deletes the file from GridFSStorage.
-    video_instance.delete()       # Deletes the model instance from the database.
-    return HttpResponse("video deleted successfully!")
 
 oauth = OAuth()
 
@@ -232,3 +178,90 @@ def list_videos(request):
     ]
     return JsonResponse(data, safe=False)
 
+
+
+@csrf_exempt
+def upload_pdf(request):
+    """
+    View to handle PDF uploads via a form.
+    Renders a template with the upload form and saves the PDF upon submission.
+    """
+    if request.method == "POST" and request.FILES.get("pdf"):
+        pdf_file = request.FILES["pdf"]
+        
+        # Save the PDF file to GridFS and retrieve the file_id
+        file_id = fs.put(pdf_file, filename=pdf_file.name)
+
+        # Save the file_id into the Pdf model
+        pdf = Pdf.objects.create(
+            file=pdf_file,
+            file_id=file_id,
+        )
+
+        return JsonResponse({"message": "Pdf uploaded", "file_id": str(file_id)})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+    # if request.method == "POST":
+    #     form = PdfUploadForm(request.POST, request.FILES)
+    #     if form.is_valid():
+    #         form.save()  # The file is saved using GridFSStorage as defined in your model.
+    #         return HttpResponse("PDF uploaded successfully!")
+    # else:
+    #     form = PdfUploadForm()
+    # return render(request, 'upload_pdf.html', {'form': form})
+
+
+def view_pdf(request, file_id):
+    """
+    View to retrieve and stream a PDF file by its file_id.
+    Args:
+        file_id: The ObjectId (string) of the Pdf model instance.
+    Returns:
+        FileResponse streaming the PDF file with appropriate content type.
+    Raises:
+        Http404 if the PDF does not exist or the file is invalid.
+    """
+    
+    try:
+        # Convert the file_id to ObjectId
+        file_id = ObjectId(file_id)
+    except Exception as e:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Retrieve the file from GridFS
+    file = fs.find_one({"_id": file_id})
+    
+    if not file:
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    
+    return FileResponse(file, content_type='application/pdf')
+
+
+def delete_pdf(request, pdf_id):
+    """
+    View to delete a PDF file.
+    Removes the file from the storage (GridFS) and deletes the associated model instance.
+    Args:
+        pdf_id: The primary key of the Pdf model instance.
+    Returns:
+        HttpResponse confirming deletion.
+    """
+    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
+    pdf_instance.file.delete()  # Deletes the file from GridFSStorage.
+    pdf_instance.delete()       # Deletes the model instance from the database.
+    return HttpResponse("PDF deleted successfully!")
+
+def delete_video(request, video_id):
+    """
+    View to delete a video file.
+    Removes the file from the storage (GridFS) and deletes the associated model instance.
+    Args:
+        video_id: The primary key of the video model instance.
+    Returns:
+        HttpResponse confirming deletion.
+    """
+    video_instance = get_object_or_404(VideoMetadata, id=video_id)
+    video_instance.file.delete()  # Deletes the file from GridFSStorage.
+    video_instance.delete()       # Deletes the model instance from the database.
+    return HttpResponse("video deleted successfully!")

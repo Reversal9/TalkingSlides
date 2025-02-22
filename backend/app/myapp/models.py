@@ -8,6 +8,7 @@ grid_fs_storage = GridFSStorage(collection='myfiles', base_url='/media/myfiles/'
 class Pdf(models.Model):
     id = models.BigAutoField(primary_key=True)
     file = models.FileField(upload_to='pdfs', storage=grid_fs_storage)
+    file_id = models.CharField(max_length=24, unique=True)  # Store ObjectId as a string
 
 
 class VideoMetadata(models.Model):

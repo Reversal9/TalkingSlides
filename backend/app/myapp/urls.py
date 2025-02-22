@@ -7,7 +7,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('message/', get_message, name='get_message'),
     path('upload-pdf/', upload_pdf, name='upload_pdf'),
-    path('view-pdf/<int:pdf_id>/', view_pdf, name='view_pdf'),
+    path('view-pdf/<str:file_id>/', view_pdf, name='view_pdf'),
     path('delete-pdf/<int:pdf_id>/', delete_pdf, name='delete_pdf'),
     path('message/', views.get_message, name='get_message'),
     path("login", views.login, name="login"),
