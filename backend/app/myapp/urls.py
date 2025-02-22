@@ -26,4 +26,6 @@ urlpatterns = [
     path('webhook/', views.webhook_handler, name='webhook'),
 
     path("text-to-speech/", views.text_to_speech, name="text_to_speech"),
+    path("list-video/", views.list_videos, name="list_videos"),
+    
 ]

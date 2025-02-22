@@ -5,6 +5,7 @@ const VideoUploadAndPlay = () => {
     const [file, setFile] = useState(null);
     const [videos, setVideos] = useState([]);
     const [selectedVideo, setSelectedVideo] = useState(null);
+    const [lastPlayedIndex, setLastPlayedIndex] = useState(-1); // Track last played video index
 
     useEffect(() => {
         fetchVideos();
@@ -12,16 +13,12 @@ const VideoUploadAndPlay = () => {
 
     const fetchVideos = async () => {
         try {
-            <source src={`http://127.0.0.1:8000/api/video/${selectedVideo}/`} type="video/mp4" />
-            
-            if (response.data.videos) {
-                setVideos(response.data.videos); // Ensure the data exists
-            } else {
-                setVideos([]); // Set an empty array if data is missing
-            }
+            const response = await axios.get("http://127.0.0.1:8000/list-video/");
+            setVideos(response.data);
+            setLastPlayedIndex(-1); // Reset index when new videos are fetched
         } catch (error) {
             console.error("Error fetching videos:", error);
-            setVideos([]); // Prevents undefined state if request fails
+            setVideos([]);
         }
     };
 
@@ -51,6 +48,20 @@ const VideoUploadAndPlay = () => {
         }
     };
 
+    const playDifferentVideo = (clickedVideoId) => {
+        if (selectedVideo === clickedVideoId) {
+            // If the same video is clicked again, pick a different one
+            const availableVideos = videos.filter(video => video.file_id !== selectedVideo);
+            if (availableVideos.length > 0) {
+                const randomVideo = availableVideos[Math.floor(Math.random() * availableVideos.length)];
+                setSelectedVideo(randomVideo.file_id);
+            }
+        } else {
+            // Select the clicked video if it's different
+            setSelectedVideo(clickedVideoId);
+        }
+    };
+
     return (
         <div>
             <h2>Upload Video</h2>
@@ -59,10 +70,10 @@ const VideoUploadAndPlay = () => {
 
             <h2>Available Videos</h2>
             <ul>
-                {videos && videos.length > 0 ? (
+                {videos.length > 0 ? (
                     videos.map((video) => (
                         <li key={video.file_id}>
-                            <button onClick={() => setSelectedVideo(video.file_id)}>
+                            <button onClick={() => playDifferentVideo(video.file_id)}>
                                 {video.title}
                             </button>
                         </li>
@@ -74,9 +85,9 @@ const VideoUploadAndPlay = () => {
 
             {selectedVideo && (
                 <div>
-                    <h3>Playing: {selectedVideo}</h3>
-                    <video controls width="640">
-                        <source src={`http://127.0.0.1:8000/api/video//${selectedVideo}/`} type="video/mp4" />
+                    <h3>Playing Video: {selectedVideo}</h3>
+                    <video key={selectedVideo} controls width="640">
+                        <source src={`http://127.0.0.1:8000/api/video/${selectedVideo}/`} type="video/mp4" />
                         Your browser does not support the video tag.
                     </video>
                 </div>
