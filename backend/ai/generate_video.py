@@ -1,9 +1,6 @@
 import requests
-import os
 import modal
 import diffusers
-from diffusers import DiffusionPipeline
-from diffusers.utils import export_to_video
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -31,22 +28,25 @@ image = (
              "HF_DEBUG": "1",
              "HF_HOME": "/ai",
          }
-          
      )
 )
 
 app = modal.App(name="video-generator")
-
+with image.imports():
+    import torch
+    from diffusers import DiffusionPipeline
+    from diffusers.utils import export_to_video
 # try to use GPU acceleration
 @app.function(
-    gpu="A100",
     image=image,
     timeout = 10 * MINUTES,
 )
-def create_video_from_text(export_path, webhook_url):
+@app.web_endpoint(method="POST")
+def create_video_from_text(export_path, webhook_url, user_prompt):
     input_prompt = """
     A helpful instructor giving a lecture.
-    """
+    """.strip() + "\n" + {user_prompt}
+    
     pipe = DiffusionPipeline.from_pretrained("damo-vilab/text-to-video-ms-1.7b", 
                                              torch_dtype=torch.float16, 
                                              variant="fp16")
