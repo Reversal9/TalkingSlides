@@ -21,6 +21,10 @@ from urllib.parse import quote_plus, urlencode
 import os
 from bson import ObjectId
 import fitz  # PyMuPDF
+import openai
+import logging
+from io import BytesIO
+from ai import GenerateAudio, GenerateText
 
 @api_view(['GET'])
 def get_message(request):
@@ -211,15 +215,19 @@ def upload_pdf(request):
         pdf_file = request.FILES["pdf"]
         
         # Save the PDF file to GridFS and retrieve the file_id
-        file_id = fs.put(pdf_file, filename=pdf_file.name)
+        # file_id = fs.put(pdf_file, filename=pdf_file.name)
 
         # Save the file_id into the Pdf model
-        pdf = Pdf.objects.create(
-            file=pdf_file,
-            file_id=file_id,
-        )
+        # pdf = Pdf.objects.create(
+        #     file=pdf_file,
+        #     file_id=file_id,
+        # )
+        binary_content = pdf_file.read()
 
-        return JsonResponse({"message": "Pdf uploaded", "file_id": str(file_id)})
+        # Generate text from PDF
+        output = GenerateText.generate_text(binary_content)
+
+        return JsonResponse({"message": "Pdf uploaded and created script", "script": str(output)})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
     # if request.method == "POST":
@@ -295,73 +303,3 @@ def delete_video(request, video_id):
     video_instance.file.delete()  # Deletes the file from GridFSStorage.
     video_instance.delete()       # Deletes the model instance from the database.
     return HttpResponse("video deleted successfully!")
-
-@csrf_exempt
-def upload_pdf_and_ask(request, file_id):
-    """
-    Uploads a PDF to OpenAI, attaches it to an assistant, and sends a prompt to get a response.
-    """
-    try:
-        # Convert file_id string to ObjectId
-        file_id = ObjectId(file_id)
-    except Exception:
-        return JsonResponse({"error": "Invalid file ID"}, status=400)
-
-    # Retrieve the file from GridFS
-    pdf_file = fs.find_one({"_id": file_id})
-
-    if not file:
-        return JsonResponse({"error": "File not found"}, status=404)
-
-    user_prompt = request.POST.get("prompt")
-
-    try:
-        # Step 1: Upload the file to OpenAI's storage
-        openai.api_key = OPENAI_API_KEY
-        response = openai.files.create(
-            file=pdf_file,
-            purpose="assistants"
-        )
-        file_id = response["id"]
-
-        # Step 2: Create an assistant (if not created already)
-        assistant = openai.beta.assistants.create(
-            name="PDF Assistant",
-            instructions="Use the uploaded PDF to answer user queries.",
-            model="gpt-4-turbo",
-            file_ids=[file_id]  # Attach the PDF
-        )
-
-        # Step 3: Create a thread
-        thread = openai.beta.threads.create()
-
-        # Step 4: Send the prompt as a message in the thread
-        message = openai.beta.threads.messages.create(
-            thread_id=thread.id,
-            role="user",
-            content=user_prompt
-        )
-
-        # Step 5: Run the assistant
-        run = openai.beta.threads.runs.create(
-            thread_id=thread.id,
-            assistant_id=assistant.id
-        )
-
-        # Wait for the assistant to process the request
-        import time
-        while run.status != "completed":
-            time.sleep(2)
-            run = openai.beta.threads.runs.retrieve(
-                thread_id=thread.id,
-                run_id=run.id
-            )
-
-        # Step 6: Retrieve the assistant's response
-        messages = openai.beta.threads.messages.list(thread_id=thread.id)
-        response_text = messages.data[0].content
-
-        return JsonResponse({"response": response_text})
-
-    except Exception as e:
-        return JsonResponse({"error": str(e)}, status=500)

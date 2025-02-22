@@ -2,51 +2,58 @@ import { useState } from "react";
 import axios from "axios";
 
 const UploadAndPrompt = () => {
-    const [file, setFile] = useState(null);
-    const [prompt, setPrompt] = useState("");
+    const [text, setText] = useState("");
+    const [fileId, setFileId] = useState(""); // Optional: If using a file ID
     const [response, setResponse] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleFileChange = (event) => {
-        setFile(event.target.files[0]);
-    };
-
-    const handleUpload = async () => {
-        if (!file || !prompt) {
-            alert("Please select a PDF and enter a question.");
+    const handleSubmit = async () => {
+        if (!text.trim()) {
+            alert("Please enter a prompt.");
             return;
         }
 
-        const formData = new FormData();
-        formData.append("pdf", file);
-        formData.append("prompt", prompt);
+        setLoading(true);
 
         try {
-            const res = await axios.post(
-                "http://localhost:8000/upload_pdf_and_ask/",
-                formData,
-                {
-                    headers: { "Content-Type": "multipart/form-data" },
-                },
-            );
+            // Construct URL with text or fileId as a parameter
+            const apiUrl = `http://localhost:8000/upload_pdf_and_ask/${fileId}/`;
+
+            const res = await axios.get(apiUrl); // Send request via GET method
+
             setResponse(res.data.response);
         } catch (error) {
             console.error("Error:", error);
-            setResponse("Failed to process the PDF.");
+            setResponse("Failed to process the request.");
         }
+
+        setLoading(false);
     };
 
     return (
         <div>
-            <h2>Upload PDF & Ask a Question</h2>
-            <input type="file" accept="application/pdf" onChange={handleFileChange} />
+            <h2>Enter a Prompt</h2>
             <textarea
-                placeholder="Enter your question..."
-                value={prompt}
-                onChange={(e) => setPrompt(e.target.value)}
+                placeholder="Type your prompt here..."
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={4}
             />
-            <button onClick={handleUpload}>Submit</button>
-            <h3>Response:</h3>
-            <p>{response}</p>
+            <input
+                type="text"
+                placeholder="Enter file ID (optional)"
+                value={fileId}
+                onChange={(e) => setFileId(e.target.value)}
+            />
+            <button onClick={handleSubmit} disabled={loading}>
+                {loading ? "Processing..." : "Submit"}
+            </button>
+            {response && (
+                <div>
+                    <h3>Response:</h3>
+                    <p>{response}</p>
+                </div>
+            )}
         </div>
     );
 };

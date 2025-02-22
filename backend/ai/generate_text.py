@@ -27,6 +27,19 @@ def parse_pdf(filename):
             delimited_text += "[Section {page_num}]\n"
         page_num += 1
     return delimited_text
+
+def parse_pdf_binary(binary_content):
+    doc = pymupdf.open(stream=binary_content,filetype="pdf")
+    delimited_text = ""
+    num_pages = doc.page_count
+    page_num = 0
+    for page in doc: 
+        page_text = page.get_text("blocks")  
+        for block in page_text:
+            delimited_text += block
+            delimited_text += "[Section {page_num}]\n"
+        page_num += 1
+    return delimited_text
         
 def generate_script(input_text):
     client = OpenAI()
