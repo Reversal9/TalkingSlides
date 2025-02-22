@@ -28,6 +28,7 @@ const Dashboard = () => {
       <UploadPDF></UploadPDF>
       <ViewPDF></ViewPDF>
       <DeletePDF></DeletePDF>
+      <TextToSpeech></TextToSpeech>
     </div>
   );
 };
