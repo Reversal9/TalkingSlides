@@ -24,8 +24,7 @@ import fitz  # PyMuPDF
 import openai
 import logging
 from io import BytesIO
-import os 
-from ai import generate_text, generate_audio, generate_video
+from ai import *
 
 
 @api_view(['GET'])
