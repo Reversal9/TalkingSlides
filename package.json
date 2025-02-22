@@ -1,0 +1,23 @@
+{
+  "name": "talkingslides",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/Reversal9/TalkingSlides#readme",
+  "bugs": {
+    "url": "https://github.com/Reversal9/TalkingSlides/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Reversal9/TalkingSlides.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
