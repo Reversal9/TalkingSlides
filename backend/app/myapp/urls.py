@@ -17,4 +17,5 @@ urlpatterns = [
     path("api/upload/", views.upload_video, name="upload_video"),
     path("api/video/<str:file_id>/", views.get_video, name="get_video"),
     path("api/videos/", views.list_videos, name="list_videos"),
+    path('webhook/', views.webhook_handler, name='webhook'),
 ]
