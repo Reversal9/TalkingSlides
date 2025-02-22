@@ -14,4 +14,5 @@ urlpatterns = [
     path("logout", views.logout, name="logout"),
     path("callback", views.callback, name="callback"),
     path('', index, name='index'),
+    path("generate_text/<str:file_id>/", views.generate_text_from_pdf, name="generate_text"),
 ]

@@ -151,3 +151,4 @@ AUTH0_DOMAIN = os.environ.get("AUTH0_DOMAIN")
 AUTH0_CLIENT_ID = os.environ.get("AUTH0_CLIENT_ID")
 AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
 
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Set this in your environment variables

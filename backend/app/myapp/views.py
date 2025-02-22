@@ -14,6 +14,7 @@ from django.conf import settings
 from django.shortcuts import redirect, render, redirect
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
+import fitz  # PyMuPDF
 
 @api_view(['GET'])
 def get_message(request):
@@ -136,3 +137,44 @@ def logout(request):
             quote_via=quote_plus,
         ),
     )
+
+
+@csrf_exempt
+def generate_text_from_pdf(request, file_id):
+    """
+    API Endpoint: Extracts text from PDF stored in GridFS and generates AI response.
+    """
+    try:
+        file_id = ObjectId(file_id)
+    except Exception:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    file = fs.find_one({"_id": file_id})
+    
+    if not file:
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    # Read PDF from GridFS
+    pdf_data = file.read()
+    
+    # Extract text using PyMuPDF
+    doc = fitz.open(stream=pdf_data, filetype="pdf")
+    pdf_text = "\n".join([page.get_text("text") for page in doc])
+
+    if not pdf_text.strip():
+        return JsonResponse({"error": "No text found in PDF"}, status=400)
+
+    # Generate AI Response using OpenAI
+    openai.api_key = settings.OPENAI_API_KEY
+    response = openai.ChatCompletion.create(
+        model="gpt-4",
+        messages=[
+            {"role": "system", "content": "You are an AI that summarizes and generates insights from PDF content."},
+            {"role": "user", "content": f"Summarize and analyze the following document:\n{pdf_text}"},
+        ],
+    )
+
+    generated_text = response["choices"][0]["message"]["content"]
+
+    return JsonResponse({"generated_text": generated_text})
+
