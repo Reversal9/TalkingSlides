@@ -1,19 +1,24 @@
 # views.py
 
 from django.shortcuts import render, get_object_or_404, redirect
-from django.http import HttpResponse, FileResponse, Http404
+from django.http import HttpResponse, FileResponse, Http404, JsonResponse, StreamingHttpResponse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .forms import PdfUploadForm
-from .models import Pdf
+from .models import Pdf, VideoMetadata
+import gridfs
+from pymongo import MongoClient
+from django.views.decorators.csrf import csrf_exempt
+from PIL import Image
+import ffmpeg
 # from .firebase_storage import upload_file  # Uncomment if needed for additional functionality
 import json
 from authlib.integrations.django_client import OAuth
 from django.conf import settings
-from django.shortcuts import redirect, render, redirect
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
+import os
 
 @api_view(['GET'])
 def get_message(request):
@@ -116,3 +121,55 @@ def logout(request):
             quote_via=quote_plus,
         ),
     )
+
+client = MongoClient("mongodb://localhost:27017/")
+db = client["videosDB"]
+fs = gridfs.GridFS(db)
+
+THUMBNAIL_DIR = "media/thumbnails/"
+
+@csrf_exempt
+def upload_video(request):
+    if request.method == "POST" and request.FILES.get("video"):
+        video_file = request.FILES["video"]
+        video_id = fs.put(video_file, filename=video_file.name)
+
+        # Generate thumbnail
+        video_path = f"/tmp/{video_file.name}"
+        thumbnail_path = os.path.join(THUMBNAIL_DIR, f"{video_file.name}.jpg")
+
+        with open(video_path, "wb") as f:
+            f.write(video_file.read())
+
+        generate_thumbnail(video_path, thumbnail_path)
+
+        # Save metadata
+        video_metadata = VideoMetadata.objects.create(
+            filename=video_file.name,
+            thumbnail=thumbnail_path.replace("media/", "")
+        )
+
+        return JsonResponse({"message": "Video uploaded", "video_id": str(video_id)})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def generate_thumbnail(video_path, thumbnail_path):
+    try:
+        (
+            ffmpeg
+            .input(video_path, ss=1)  # Capture frame at 1 second
+            .output(thumbnail_path, vframes=1)
+            .run(overwrite_output=True)
+        )
+    except Exception as e:
+        print("Error generating thumbnail:", e)
+
+@csrf_exempt
+def get_video(request, filename):
+    file = fs.find_one({"filename": filename})
+    if not file:
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    response = StreamingHttpResponse(file, content_type="video/mp4")
+    response["Content-Disposition"] = f'inline; filename="{filename}"'
+    return response

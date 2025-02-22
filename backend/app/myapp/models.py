@@ -6,3 +6,8 @@ grid_fs_storage = GridFSStorage(collection='myfiles', base_url='/media/myfiles/'
 
 class Pdf(models.Model):
     file = models.FileField(upload_to='pdfs', storage=grid_fs_storage)
+
+class VideoMetadata(models.Model):
+    filename = models.CharField(max_length=255)
+    upload_date = models.DateTimeField(auto_now_add=True)
+    thumbnail = models.ImageField(upload_to="thumbnails/", null=True, blank=True)
