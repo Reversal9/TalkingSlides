@@ -8,9 +8,6 @@ sync_api_key = os.getenv("SYNC_API_KEY")
 sync_url = "https://api.sync.so/v2/generate"
 MINUTES = 60
 
-# put this in views
-WEBHOOK_SECRET = "whsec_872d84e3f52b7250d6553f3400f147c675866055edb796a6ba0e4bfb61ab5f20"
-
 image = (
     # check python version
     modal.Image.debian_slim(python_version="3.11")
@@ -44,7 +41,7 @@ with image.imports():
     image=image,
     timeout = 10 * MINUTES,
 )
-def create_video_from_text(export_path, webhook_url, user_prompt):
+def create_video_from_text(export_path, user_prompt):
     input_prompt = """
     A helpful instructor giving a lecture.
     """.strip() + "\n" + {user_prompt}
@@ -64,7 +61,7 @@ def create_video_from_text(export_path, webhook_url, user_prompt):
     except Exception as e: 
         payload = {"status" : "error", "video_path" : str(e)} 
 
-    response = requests.request("POST", webhook_url, json=payload)
+    return payload
 
 
 def run_sync(video_url, audio_url, webhook_url):
