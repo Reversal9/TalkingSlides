@@ -7,7 +7,7 @@ function ViewPDF({ pdfId }) {
   useEffect(() => {
     async function fetchPDF() {
       try {
-        const response = await fetch(`http://your-backend-domain/view_pdf/${pdfId}/`);
+        const response = await fetch(`http://127.0.0.1:8000/view_pdf/${pdfId}/`);
         if (!response.ok) {
           throw new Error('Failed to fetch PDF');
         }

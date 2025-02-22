@@ -20,6 +20,11 @@ from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 import os
 from bson import ObjectId
+import openai
+# from pdfminer.high_level import extract_text
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from dotenv import load_dotenv
 
 @api_view(['GET'])
 def get_message(request):
@@ -29,47 +34,6 @@ def get_message(request):
         JSON response with a test message.
     """
     return Response({"message": "Hello, this is your message!"}, status=status.HTTP_200_OK)
-
-def upload_pdf(request):
-    """
-    View to handle PDF uploads via a form.
-    Renders a template with the upload form and saves the PDF upon submission.
-    """
-    if request.method == "POST":
-        form = PdfUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()  # The file is saved using GridFSStorage as defined in your model.
-            return HttpResponse("PDF uploaded successfully!")
-    else:
-        form = PdfUploadForm()
-    return render(request, 'upload_pdf.html', {'form': form})
-
-def view_pdf(request, pdf_id):
-    """
-    View to retrieve and stream a PDF file.
-    Args:
-        pdf_id: The primary key of the Pdf model instance.
-    Returns:
-        FileResponse streaming the PDF file with appropriate content type.
-    Raises:
-        Http404 if the PDF does not exist.
-    """
-    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
-    return FileResponse(pdf_instance.file, content_type='application/pdf')
-
-def delete_pdf(request, pdf_id):
-    """
-    View to delete a PDF file.
-    Removes the file from the storage (GridFS) and deletes the associated model instance.
-    Args:
-        pdf_id: The primary key of the Pdf model instance.
-    Returns:
-        HttpResponse confirming deletion.
-    """
-    pdf_instance = get_object_or_404(Pdf, id=pdf_id)
-    pdf_instance.file.delete()  # Deletes the file from GridFSStorage.
-    pdf_instance.delete()       # Deletes the model instance from the database.
-    return HttpResponse("PDF deleted successfully!")
 
 oauth = OAuth()
 
@@ -233,12 +197,12 @@ def list_videos(request):
     data = [
         {
             "title": video.title,
+            "file_id": video.file_id,
             "thumbnail": video.thumbnail.url if video.thumbnail else None
         }
         for video in videos
     ]
     return JsonResponse(data, safe=False)
-
 
 
 @csrf_exempt
@@ -369,3 +333,70 @@ async def compile_video_endpoint(
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 '''
+
+# OpenAI API Key (Store this securely!)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+@csrf_exempt
+def text_to_speech(request):
+    """
+    Converts text to speech using OpenAI's TTS API and returns the audio file.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=400)
+
+    text = request.POST.get("text", "")
+    if not text:
+        return JsonResponse({"error": "Missing text"}, status=400)
+
+    try:
+        # Call OpenAI's TTS API
+        openai.api_key = OPENAI_API_KEY
+        response = openai.audio.speech.create(
+            model="tts-1",
+            voice="alloy",  # Options: alloy, echo, fable, onyx, nova, shimmer
+            input=text
+        )
+
+        # Save the audio to a file
+        audio_path = "media/output_audio.mp3"
+        with open(audio_path, "wb") as audio_file:
+            audio_file.write(response["content"])
+
+        return FileResponse(open(audio_path, "rb"), content_type="audio/mpeg")
+
+    except Exception as e:
+        print("Error generating speech:", str(e))
+        return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
+
+# # Load environment variables
+# load_dotenv()
+# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+# @api_view(['POST'])
+# def generate_text(request):
+#     if 'pdf' not in request.FILES:
+#         return JsonResponse({"error": "No PDF uploaded"}, status=400)
+
+#     pdf_file = request.FILES['pdf']
+#     file_path = default_storage.save(pdf_file.name, ContentFile(pdf_file.read()))
+
+#     try:
+#         extracted_text = extract_text(file_path)
+#         os.remove(file_path)  # Clean up file
+
+#         prompt = f"Summarize this document:\n\n{extracted_text}"
+        
+#         response = openai.ChatCompletion.create(
+#             model="gpt-4",
+#             messages=[{"role": "system", "content": "You are an AI summarization assistant."},
+#                       {"role": "user", "content": prompt}],
+#             max_tokens=500
+#         )
+
+#         generated_text = response["choices"][0]["message"]["content"]
+
+#         return JsonResponse({"generated_text": generated_text})
+
+#     except Exception as e:
+#         return JsonResponse({"error": str(e)}, status=500)

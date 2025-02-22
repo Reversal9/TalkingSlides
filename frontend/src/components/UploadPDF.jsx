@@ -17,7 +17,7 @@ function UploadPDF() {
     formData.append('file', file);
 
     try {
-      const response = await fetch('http://your-backend-domain/upload_pdf/', {
+      const response = await fetch('http://127.0.0.1:8000/upload_pdf/', {
         method: 'POST',
         body: formData,
       });
