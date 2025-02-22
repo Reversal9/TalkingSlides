@@ -41,8 +41,7 @@ with image.imports():
     image=image,
     timeout = 10 * MINUTES,
 )
-@app.web_endpoint(method="POST")
-def create_video_from_text(export_path, webhook_url, user_prompt):
+def create_video_from_text(export_path, user_prompt):
     input_prompt = """
     A helpful instructor giving a lecture.
     """.strip() + "\n" + {user_prompt}
@@ -62,12 +61,8 @@ def create_video_from_text(export_path, webhook_url, user_prompt):
     except Exception as e: 
         payload = {"status" : "error", "video_path" : str(e)} 
 
-    response = requests.post(webhook_url, json=payload)
-'''
-# image to video function in case text doesn't work
-@app.function()
-def create_video_from_img(img_url):
-'''
+    return payload
+
 
 def run_sync(video_url, audio_url, webhook_url):
     payload = {
