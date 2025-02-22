@@ -7,7 +7,3 @@ grid_fs_storage = GridFSStorage(collection='myfiles', base_url='/media/myfiles/'
 class Pdf(models.Model):
     id = models.BigAutoField(primary_key=True)
     file = models.FileField(upload_to='pdfs', storage=grid_fs_storage)
-
-class Video(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    file = models.FileField(upload_to='videos', storage=grid_fs_storage)
