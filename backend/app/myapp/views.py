@@ -5,7 +5,7 @@ from django.http import HttpResponse, FileResponse, Http404, JsonResponse, Strea
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .forms import PdfUploadForm
+from .forms import PdfUploadForm, VideoUploadForm
 from .models import Pdf, VideoMetadata
 import gridfs
 from pymongo import MongoClient
@@ -69,7 +69,47 @@ def delete_pdf(request, pdf_id):
     pdf_instance.file.delete()  # Deletes the file from GridFSStorage.
     pdf_instance.delete()       # Deletes the model instance from the database.
     return HttpResponse("PDF deleted successfully!")
-    return Response({"message": "Hello, this is your message!"})
+
+def upload_video(request):
+    """
+    View to handle video uploads via a form.
+    Renders a template with the upload form and saves the video upon submission.
+    """
+    if request.method == "POST":
+        form = VideoUploadForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()  # The file is saved using GridFSStorage as defined in your model.
+            return HttpResponse("video uploaded successfully!")
+    else:
+        form = VideoUploadForm()
+    return render(request, 'upload_video.html', {'form': form})
+
+def view_video(request, video_id):
+    """
+    View to retrieve and stream a video file.
+    Args:
+        video_id: The primary key of the video model instance.
+    Returns:
+        FileResponse streaming the video file with appropriate content type.
+    Raises:
+        Http404 if the video does not exist.
+    """
+    video_instance = get_object_or_404(VideoMetadata, id=video_id)
+    return FileResponse(video_instance.file, content_type='application/video')
+
+def delete_video(request, video_id):
+    """
+    View to delete a video file.
+    Removes the file from the storage (GridFS) and deletes the associated model instance.
+    Args:
+        video_id: The primary key of the video model instance.
+    Returns:
+        HttpResponse confirming deletion.
+    """
+    video_instance = get_object_or_404(VideoMetadata, id=video_id)
+    video_instance.file.delete()  # Deletes the file from GridFSStorage.
+    video_instance.delete()       # Deletes the model instance from the database.
+    return HttpResponse("video deleted successfully!")
 
 oauth = OAuth()
 
