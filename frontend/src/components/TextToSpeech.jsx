@@ -15,7 +15,7 @@ const TextToSpeech = () => {
     formData.append("text", text);
 
     try {
-      const response = await axios.post("http://localhost:8000/text-to-speech/", formData, {
+      const response = await axios.post("http://127.0.0.1:8000/text-to-speech/", formData, {
         responseType: "blob", // Receive audio as a binary blob
       });
 

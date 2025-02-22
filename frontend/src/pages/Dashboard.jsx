@@ -7,6 +7,7 @@ import UploadPDF from '../components/UploadPDF';
 import DeletePDF from '../components/DeletePDF';
 import ViewPDF from '../components/ViewPDF';
 import TextToSpeech from '../components/TextToSpeech';
+import VideoUploadAndPlay from '../components/VideoUploadAndPlay';
 
 const Dashboard = () => {
   const { logout } = useAuth0();  // <-- Get logout function from Auth0
@@ -25,10 +26,11 @@ const Dashboard = () => {
       <button onClick={() => logout({ returnTo: window.location.origin })}>
           Logout
       </button>
-      <UploadPDF></UploadPDF>
-      <ViewPDF></ViewPDF>
-      <DeletePDF></DeletePDF>
-      <TextToSpeech></TextToSpeech>
+      {/* <UploadPDF></UploadPDF> */}
+      {/* <ViewPDF></ViewPDF> */}
+      {/* <DeletePDF></DeletePDF> */}
+      {/* <TextToSpeech></TextToSpeech> */}
+      <VideoUploadAndPlay></VideoUploadAndPlay>
     </div>
   );
 };

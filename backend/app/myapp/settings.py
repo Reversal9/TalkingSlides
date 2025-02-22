@@ -26,12 +26,7 @@ SECRET_KEY = 'django-insecure-3=j0qn@os&@+n)u4t+-9=ym%b1c%#_1n*c32*j-0((=p@&hhx4
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = [ 
-    "127.0.0.1",   # Localhost
-    "localhost",    # Localhost
-    # "yourdomain.com",  # Production domain
-    # "your-ip-address", # Your server's IP (if hosting)
-]
+ALLOWED_HOSTS = ['*']
 
 # Application definition
 
@@ -136,7 +131,23 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True  # ✅ Allows sending cookies & authentication headers
+CORS_ORIGIN_ALLOW_ALL = True  # Older versions use this instead of `CORS_ALLOW_ALL_ORIGINS`
 
+CORS_ALLOW_METHODS = [
+    "GET",
+    "POST",
+    "PUT",
+    "PATCH",
+    "DELETE",
+    "OPTIONS",
+]
+
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "authorization",
+    "x-csrftoken",
+]
 
 # Load environment definition file
 
@@ -153,3 +164,5 @@ AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Set this in your environment variables
