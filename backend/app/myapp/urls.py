@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from .views import get_message, upload_pdf, view_pdf, delete_pdf
+from .views import get_message, upload_pdf, view_pdf, delete_pdf, index
 from . import views
 
 urlpatterns = [
@@ -13,4 +13,5 @@ urlpatterns = [
     path("login", views.login, name="login"),
     path("logout", views.logout, name="logout"),
     path("callback", views.callback, name="callback"),
+    path('', index, name='index'),
 ]
