@@ -28,7 +28,7 @@ def parse_pdf(filename):
         page_num += 1
     return delimited_text
         
-def create_script(input_text):
+def generate_script(input_text):
     client = OpenAI()
 
     script = ""
@@ -53,3 +53,4 @@ def create_script(input_text):
             script += chunk.choices[0].delta.content
         
     return script
+
