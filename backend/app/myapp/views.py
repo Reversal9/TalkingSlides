@@ -20,6 +20,7 @@ from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 import os
 from bson import ObjectId
+import openai
 
 @api_view(['GET'])
 def get_message(request):
@@ -369,3 +370,38 @@ async def compile_video_endpoint(
     except Exception as e:
         return JSONResponse({"error": str(e)}, status_code=500)
 '''
+
+# OpenAI API Key (Store this securely!)
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+@csrf_exempt
+def text_to_speech(request):
+    """
+    Converts text to speech using OpenAI's TTS API and returns the audio file.
+    """
+    if request.method != "POST":
+        return JsonResponse({"error": "Invalid request method"}, status=400)
+
+    text = request.POST.get("text", "")
+    if not text:
+        return JsonResponse({"error": "Missing text"}, status=400)
+
+    try:
+        # Call OpenAI's TTS API
+        openai.api_key = OPENAI_API_KEY
+        response = openai.audio.speech.create(
+            model="tts-1",
+            voice="alloy",  # Options: alloy, echo, fable, onyx, nova, shimmer
+            input=text
+        )
+
+        # Save the audio to a file
+        audio_path = "media/output_audio.mp3"
+        with open(audio_path, "wb") as audio_file:
+            audio_file.write(response["content"])
+
+        return FileResponse(open(audio_path, "rb"), content_type="audio/mpeg")
+
+    except Exception as e:
+        print("Error generating speech:", str(e))
+        return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
