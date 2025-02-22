@@ -29,6 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = [ 
     "127.0.0.1",   # Localhost
     "localhost",    # Localhost
+    "http://localhost:5173",
     # "yourdomain.com",  # Production domain
     # "your-ip-address", # Your server's IP (if hosting)
 ]

@@ -19,13 +19,17 @@ const UploadAndPrompt = () => {
         formData.append("pdf", file);
 
         try {
-            const uploadRes = await axios.post("http://127.0.0.1:8000/upload_pdf/", formData);
+            const uploadRes = await axios.post(
+                "http://127.0.0.1:8000/upload-pdf/",
+                formData,
+            );
             const fileId = uploadRes.data.file_id;
-            
-            // Fetch generated text after upload
-            const aiRes = await axios.get(`http://127.0.0.1:8000/generate_text/${fileId}/`);
-            setResponseText(aiRes.data.generated_text);
 
+            // Fetch generated text after upload
+            const aiRes = await axios.get(
+                `http://127.0.0.1:8000/generate_text/${fileId}/`,
+            );
+            setResponseText(aiRes.data.generated_text);
         } catch (error) {
             console.error("Error uploading file:", error);
         }
