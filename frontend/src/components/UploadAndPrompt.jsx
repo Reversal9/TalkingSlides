@@ -1,54 +1,50 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import axios from "axios";
 
 const UploadAndPrompt = () => {
-    const [file, setFile] = useState(null);
-    const [responseText, setResponseText] = useState("");
+  const [file, setFile] = useState(null);
+  const [prompt, setPrompt] = useState("");
+  const [response, setResponse] = useState("");
 
-    const handleFileChange = (event) => {
-        setFile(event.target.files[0]);
-    };
+  const handleFileChange = (event) => {
+    setFile(event.target.files[0]);
+  };
 
-    const handleUpload = async () => {
-        if (!file) {
-            alert("Please select a PDF file");
-            return;
-        }
+  const handleUpload = async () => {
+    if (!file || !prompt) {
+      alert("Please select a PDF and enter a question.");
+      return;
+    }
 
-        const formData = new FormData();
-        formData.append("pdf", file);
+    const formData = new FormData();
+    formData.append("pdf", file);
+    formData.append("prompt", prompt);
 
-        try {
-            const uploadRes = await axios.post(
-                "http://127.0.0.1:8000/upload-pdf/",
-                formData,
-            );
-            const fileId = uploadRes.data.file_id;
+    try {
+      const res = await axios.post("http://localhost:8000/upload_pdf_and_ask/", formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+      });
+      setResponse(res.data.response);
+    } catch (error) {
+      console.error("Error:", error);
+      setResponse("Failed to process the PDF.");
+    }
+  };
 
-            // Fetch generated text after upload
-            const aiRes = await axios.get(
-                `http://127.0.0.1:8000/generate_text/${fileId}/`,
-            );
-            setResponseText(aiRes.data.generated_text);
-        } catch (error) {
-            console.error("Error uploading file:", error);
-        }
-    };
-
-    return (
-        <div>
-            <h2>Upload PDF and Generate AI Text</h2>
-            <input type="file" accept="application/pdf" onChange={handleFileChange} />
-            <button onClick={handleUpload}>Upload & Generate</button>
-
-            {responseText && (
-                <div>
-                    <h3>Generated Text:</h3>
-                    <p>{responseText}</p>
-                </div>
-            )}
-        </div>
-    );
+  return (
+    <div>
+      <h2>Upload PDF & Ask a Question</h2>
+      <input type="file" accept="application/pdf" onChange={handleFileChange} />
+      <textarea
+        placeholder="Enter your question..."
+        value={prompt}
+        onChange={(e) => setPrompt(e.target.value)}
+      />
+      <button onClick={handleUpload}>Submit</button>
+      <h3>Response:</h3>
+      <p>{response}</p>
+    </div>
+  );
 };
 
 export default UploadAndPrompt;
