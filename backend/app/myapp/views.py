@@ -71,35 +71,56 @@ oauth.register(
     "auth0",
     client_id=settings.AUTH0_CLIENT_ID,
     client_secret=settings.AUTH0_CLIENT_SECRET,
-    client_kwargs={
-        "scope": "openid profile email",
-    },
-    server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+    api_base_url="http://localhost:5173/",
+    access_token_url="http://localhost:5173/oauth/token",
+    authorize_url="http://localhost:5173/authorize",
+    client_kwargs={"scope": "openid profile email"},
 )
+
+# oauth.register(
+#     "auth0",
+#     client_id=settings.AUTH0_CLIENT_ID,
+#     client_secret=settings.AUTH0_CLIENT_SECRET,
+#     client_kwargs={
+#         "scope": "openid profile email",
+#     },
+#     server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
+# )
 
 
 def index(request):
-
-    return render(
-        request,
-        "index.html",
-        context={
-            "session": request.session.get("user"),
-            "pretty": json.dumps(request.session.get("user"), indent=4),
-        },
-    )
-
+    return redirect("http://localhost:5173/")
+    # return render(
+        # request,
+        # "index.html",
+        # context={
+        #     "session": request.session.get("user"),
+        #     "pretty": json.dumps(request.session.get("user"), indent=4),
+        # },
+    # )
 
 def callback(request):
-    token = oauth.auth0.authorize_access_token(request)
-    request.session["user"] = token
-    return redirect(request.build_absolute_uri(reverse("index")))
-
+    try:
+        token = oauth.auth0.authorize_access_token(request)
+        user_info = oauth.auth0.parse_id_token(request, token)
+        request.session["user"] = user_info
+        return redirect("http://localhost:5173/dashboard")  # Redirect to React frontend
+    except Exception as e:
+        print("Auth0 callback error:", str(e))
+        return redirect("/") 
+    
+# def callback(request):
+#     token = oauth.auth0.authorize_access_token(request)
+#     request.session["user"] = token
+#     return redirect(request.build_absolute_uri(reverse("index")))
 
 def login(request):
-    return oauth.auth0.authorize_redirect(
-        request, request.build_absolute_uri(reverse("callback"))
-    )
+    return oauth.auth0.authorize_redirect(request, request.build_absolute_uri("/callback"))
+
+# def login(request):
+#     return oauth.auth0.authorize_redirect(
+#         request, request.build_absolute_uri(reverse("callback"))
+#     )
 
 
 def logout(request):
