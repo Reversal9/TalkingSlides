@@ -1,8 +1,12 @@
 import requests
+import os
+from dotenv import load_dotenv
 
+load_dotenv()
+api_key = os.getenv("SYNC_API_KEY")
 url = "https://api.sync.so/v2/generate"
 
-def run_sync():
+def run_sync(video_url, audio_url, webhook_url):
     payload = {
         "model": "lipsync-1.7.1",
         "input": [
