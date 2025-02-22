@@ -225,9 +225,10 @@ def upload_pdf(request):
         binary_content = pdf_file.read()
 
         # Generate text from PDF
-        output = GenerateText.generate_text(binary_content)
+        text = GenerateText.parse_pdf_binary(binary_content)
+        script = GenerateText.generate_script(text)
 
-        return JsonResponse({"message": "Pdf uploaded and created script", "script": str(output)})
+        return JsonResponse({"message": "Pdf uploaded and created script", "script": str(script)})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
     # if request.method == "POST":
