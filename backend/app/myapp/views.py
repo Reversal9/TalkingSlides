@@ -24,7 +24,9 @@ import fitz  # PyMuPDF
 import openai
 import logging
 from io import BytesIO
-from ai import GenerateAudio, GenerateText
+import os 
+from ai import generate_text, generate_audio, generate_video
+
 
 @api_view(['GET'])
 def get_message(request):
@@ -225,8 +227,8 @@ def upload_pdf(request):
         binary_content = pdf_file.read()
 
         # Generate text from PDF
-        text = GenerateText.parse_pdf_binary(binary_content)
-        script = GenerateText.generate_script(text)
+        text = generate_text.parse_pdf_binary(binary_content)
+        script = generate_text.generate_script(text)
 
         return JsonResponse({"message": "Pdf uploaded and created script", "script": str(script)})
 
