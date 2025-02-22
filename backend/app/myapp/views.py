@@ -213,30 +213,39 @@ def upload_pdf(request):
 
 def view_pdf(request, file_id):
     """
-    View to retrieve and stream a PDF file by its file_id.
+    View to retrieve and stream a PDF file from GridFS.
     Args:
         file_id: The ObjectId (string) of the Pdf model instance.
     Returns:
-        FileResponse streaming the PDF file with appropriate content type.
-    Raises:
-        Http404 if the PDF does not exist or the file is invalid.
+        StreamingHttpResponse streaming the PDF file with appropriate content type.
     """
-    
     try:
-        # Convert the file_id to ObjectId
+        # Convert file_id string to ObjectId
         file_id = ObjectId(file_id)
-    except Exception as e:
+    except Exception:
         return JsonResponse({"error": "Invalid file ID"}, status=400)
 
     # Retrieve the file from GridFS
     file = fs.find_one({"_id": file_id})
-    
+
     if not file:
         return JsonResponse({"error": "File not found"}, status=404)
 
-    
-    return FileResponse(file, content_type='application/pdf')
+    # Create a generator function to stream the file in chunks
+    def file_iterator():
+        chunk_size = 8192  # 8 KB chunks
+        with file as pdf_file:
+            while True:
+                chunk = pdf_file.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
 
+    # Use StreamingHttpResponse for large file handling
+    response = StreamingHttpResponse(file_iterator(), content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="{file.filename}"'
+
+    return response
 
 def delete_pdf(request, pdf_id):
     """
