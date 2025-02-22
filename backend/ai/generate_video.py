@@ -9,11 +9,40 @@ from dotenv import load_dotenv
 load_dotenv()
 sync_api_key = os.getenv("SYNC_API_KEY")
 sync_url = "https://api.sync.so/v2/generate"
+MINUTES = 60
+
+image = (
+    # check python version
+    modal.Image.debian_slim(python_version="3.11")
+     .apt_install("git")
+     .pip_install(
+        "accelerate==0.33.0",
+        "diffusers==0.31.0",
+        "fastapi[standard]==0.115.4",
+        "huggingface-hub[hf_transfer]==0.25.2",
+        "sentencepiece==0.2.0",
+        "torch==2.5.1",
+        "torchvision==0.20.1",
+        "transformers~=4.44.0",
+     )
+     .env(
+         {
+             "HF_HUB_ENABLE_HF_TRANSFER": "1",
+             "HF_DEBUG": "1",
+             "HF_HOME": "/ai",
+         }
+          
+     )
+)
 
 app = modal.App(name="video-generator")
 
 # try to use GPU acceleration
-@app.function(gpu="A100")
+@app.function(
+    gpu="A100",
+    image=image,
+    timeout = 10 * MINUTES,
+)
 def create_video_from_text(export_path, webhook_url):
     input_prompt = """
     A helpful instructor giving a lecture.
@@ -21,12 +50,9 @@ def create_video_from_text(export_path, webhook_url):
     pipe = DiffusionPipeline.from_pretrained("damo-vilab/text-to-video-ms-1.7b", 
                                              torch_dtype=torch.float16, 
                                              variant="fp16")
-    pipe = pipe.to("cuda")
     pipe.enable_model_cpu_offload()
-
     # memory optimization
     # https://github.com/huggingface/diffusers/issues/6869#issuecomment-1929569492
-    
     pipe.unet.enable_forward_chunking(chunk_size=1, dim=1)
     pipe.enable_vae_slicing()
     video_frames = pipe(input_prompt, num_frames=24).frames[0]
@@ -43,7 +69,6 @@ def create_video_from_text(export_path, webhook_url):
 def create_video_from_img(img_url):
 '''
 
-@app.function(gpu="A100")
 def run_sync(video_url, audio_url, webhook_url):
     payload = {
         "model": "lipsync-1.7.1",
