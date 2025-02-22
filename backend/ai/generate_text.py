@@ -29,13 +29,13 @@ def create_script(input_text):
     client = OpenAI()
 
     script = ""
-    completion = client.chat.completions.create(
+    stream = client.chat.completions.create(
         model="gpt-4o-mini",
         messages=[
             {"role": "developer", "content": system_prompt},
             {
                 "role": "user",
-                "content": "Convert this text into a script."
+                "content": "Convert these lecture notes into a presentation script."
             }
         ],
         stream=True,
@@ -45,7 +45,8 @@ def create_script(input_text):
         }
     )
 
-    for chunk in completions:
-        script += completion.choices[0].message
+    for chunk in stream:
+        if chunk.choices[0].delta.content is not None:
+            script += chunk.choices[0].delta.content
         
     return script
