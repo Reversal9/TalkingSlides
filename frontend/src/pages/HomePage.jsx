@@ -34,9 +34,6 @@ const HomePage = ({ setFirstPageVisited }) => {
                 <button onClick={() => loginWithRedirect()}>Login</button>
             )}
             <div>
-                <button onClick={() => navigate("/dashboard")} style={{ marginRight: "0.5rem" }}>
-                Log in
-                </button>
             </div>
         </div>
     );
