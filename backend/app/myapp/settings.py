@@ -153,3 +153,5 @@ AUTH0_CLIENT_SECRET = os.environ.get("AUTH0_CLIENT_SECRET")
 
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
+
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")  # Set this in your environment variables

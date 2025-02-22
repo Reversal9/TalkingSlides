@@ -27,6 +27,8 @@ const Dashboard = () => {
       <UploadPDF></UploadPDF>
       <ViewPDF></ViewPDF>
       <DeletePDF></DeletePDF>
+      <UploadAndPrompt></UploadAndPrompt>
+
     </div>
   );
 };
