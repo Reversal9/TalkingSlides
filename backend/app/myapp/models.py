@@ -1,6 +1,7 @@
 from djongo.storage import GridFSStorage
 from django.db import models
 from django.conf import settings
+from bson import ObjectId
 
 grid_fs_storage = GridFSStorage(collection='myfiles', base_url='/media/myfiles/')
 
@@ -15,3 +16,4 @@ class VideoMetadata(models.Model):
     title = models.CharField(max_length=255)
     upload_date = models.DateTimeField(auto_now_add=True)
     thumbnail = models.ImageField(upload_to="thumbnails/", null=True, blank=True)
+    file_id = models.CharField(max_length=24, unique=True)  # Store ObjectId as a string

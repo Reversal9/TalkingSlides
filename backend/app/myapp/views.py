@@ -19,6 +19,7 @@ from django.conf import settings
 from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 import os
+from bson import ObjectId
 
 @api_view(['GET'])
 def get_message(request):
@@ -69,33 +70,6 @@ def delete_pdf(request, pdf_id):
     pdf_instance.file.delete()  # Deletes the file from GridFSStorage.
     pdf_instance.delete()       # Deletes the model instance from the database.
     return HttpResponse("PDF deleted successfully!")
-
-def upload_video(request):
-    """
-    View to handle video uploads via a form.
-    Renders a template with the upload form and saves the video upon submission.
-    """
-    if request.method == "POST":
-        form = VideoUploadForm(request.POST, request.FILES)
-        if form.is_valid():
-            form.save()  # The file is saved using GridFSStorage as defined in your model.
-            return HttpResponse("video uploaded successfully!")
-    else:
-        form = VideoUploadForm()
-    return render(request, 'upload_video.html', {'form': form})
-
-def view_video(request, video_id):
-    """
-    View to retrieve and stream a video file.
-    Args:
-        video_id: The primary key of the video model instance.
-    Returns:
-        FileResponse streaming the video file with appropriate content type.
-    Raises:
-        Http404 if the video does not exist.
-    """
-    video_instance = get_object_or_404(VideoMetadata, id=video_id)
-    return FileResponse(video_instance.file, content_type='application/video')
 
 def delete_video(request, video_id):
     """
@@ -162,11 +136,11 @@ def logout(request):
         ),
     )
 
-client = MongoClient("mongodb://localhost:27017/")
-db = client["videosDB"]
-fs = gridfs.GridFS(db)
-
 THUMBNAIL_DIR = "media/thumbnails/"
+
+client = MongoClient(settings.DATABASES['default']['CLIENT']['host'])
+db = client[settings.DATABASES['default']['NAME']]
+fs = gridfs.GridFS(db)  # Initialize GridFS
 
 @csrf_exempt
 def upload_video(request):
@@ -185,7 +159,9 @@ def upload_video(request):
 
         # Save metadata
         video_metadata = VideoMetadata.objects.create(
-            filename=video_file.name,
+            file=video_file,
+            file_id=video_id,
+            title=video_file.name,
             thumbnail=thumbnail_path.replace("media/", "")
         )
 
@@ -205,20 +181,51 @@ def generate_thumbnail(video_path, thumbnail_path):
         print("Error generating thumbnail:", e)
 
 @csrf_exempt
-def get_video(request, filename):
-    file = fs.find_one({"filename": filename})
+def get_video(request, file_id):
+    try:
+        # Convert the file_id to ObjectId
+        file_id = ObjectId(file_id)
+    except Exception as e:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Retrieve the file from GridFS
+    file = fs.find_one({"_id": file_id})
+    
     if not file:
         return JsonResponse({"error": "File not found"}, status=404)
 
-    response = StreamingHttpResponse(file, content_type="video/mp4")
-    response["Content-Disposition"] = f'inline; filename="{filename}"'
+    # Create a generator to stream the video file
+    def file_iterator():
+        # Fetch the video data in chunks
+        chunk_size = 1024 * 1024  # 1 MB chunks
+        with file as video_file:
+            while True:
+                chunk = video_file.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+
+    # Set the appropriate content type for video streaming
+    response = StreamingHttpResponse(file_iterator(), content_type="video/mp4")
+    
+    # Set the content-disposition header for inline viewing or download
+    response['Content-Disposition'] = f'inline; filename="{file.filename}"'
+    
     return response
+# def get_video(request, file_id):
+#     file = fs.find_one({"_id": file_id})
+#     if not file:
+#         return JsonResponse({"error": "File not found"}, status=404)
+
+#     response = StreamingHttpResponse(file, content_type="video/mp4")
+#     response["Content-Disposition"] = f'inline; filename="{file.filename}"'
+#     return response
 
 def list_videos(request):
     videos = VideoMetadata.objects.all()
     data = [
         {
-            "filename": video.filename,
+            "title": video.title,
             "thumbnail": video.thumbnail.url if video.thumbnail else None
         }
         for video in videos
