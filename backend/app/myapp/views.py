@@ -260,19 +260,28 @@ def delete_pdf(request, pdf_id):
     pdf_instance.delete()       # Deletes the model instance from the database.
     return HttpResponse("PDF deleted successfully!")
 
-def delete_video(request, video_id):
+@api_view(['DELETE'])
+def delete_video(request, file_id):
     """
-    View to delete a video file.
-    Removes the file from the storage (GridFS) and deletes the associated model instance.
+    View to delete a video file from GridFS.
     Args:
-        video_id: The primary key of the video model instance.
+        file_id: The ObjectId of the file in GridFS.
     Returns:
-        HttpResponse confirming deletion.
+        JsonResponse confirming deletion or an error message.
     """
-    video_instance = get_object_or_404(VideoMetadata, id=video_id)
-    video_instance.file.delete()  # Deletes the file from GridFSStorage.
-    video_instance.delete()       # Deletes the model instance from the database.
-    return HttpResponse("video deleted successfully!")
+    try:
+        file_id = ObjectId(file_id)  # Convert file_id string to ObjectId
+    except Exception:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Check if the file exists in GridFS
+    if not fs.exists(file_id):
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    # Delete the file from GridFS
+    fs.delete(file_id)
+
+    return JsonResponse({"message": "Video deleted successfully"}, status=200)
 
 def webhook_handler(request):
     if (request.method != "POST"): 
