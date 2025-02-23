@@ -19,6 +19,13 @@ class VideoMetadata(models.Model):
     thumbnail = models.ImageField(upload_to="thumbnails/", null=True, blank=True)
     file_id = models.CharField(max_length=24, unique=True)  # Store ObjectId as a string
 
+
+class Audio(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    file = models.FileField(upload_to='audios', storage=grid_fs_storage)
+    upload_date = models.DateTimeField(auto_now_add=True)
+    file_id = models.CharField(max_length=24, unique=True)  # Store ObjectId as a string
+
 class Avatar(models.Model):
     id = models.BigAutoField(primary_key=True)
     upload_date = models.DateTimeField(auto_now_add=True)

@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .forms import PdfUploadForm, VideoUploadForm
-from .models import Pdf, VideoMetadata, Avatar
+from .models import Pdf, VideoMetadata, Avatar, Audio
 import gridfs
 from pymongo import MongoClient
 from django.views.decorators.csrf import csrf_exempt
@@ -362,7 +362,7 @@ async def compile_video_endpoint(
 openai.api_key = settings.OPENAI_API_KEY
 
 @csrf_exempt
-def get_audio(request):
+def get_audio_gpt(request):
     """
     View to retrieve an audio file from GridFS using file_id and process it.
     """
@@ -393,3 +393,93 @@ def get_audio(request):
         return JsonResponse({"message": "Audio processed", "result": str("Hopium!")})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
+
+
+
+@csrf_exempt
+def upload_audio(request):
+    if request.method == "POST" and request.FILES.get("audio"):
+        audio_file = request.FILES["audio"]
+        audio_id = fs.put(audio_file, filename=audio_file.name)
+
+        # Save metadata
+        audio_metadata = Audio.objects.create(
+            file=audio_file,
+            file_id=audio_id,
+        )
+
+        return JsonResponse({"message": "audio uploaded", "audio_id": str(audio_id)})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+@csrf_exempt
+def get_audio(request, file_id):
+    try:
+        # Convert the file_id to ObjectId
+        file_id = ObjectId(file_id)
+    except Exception as e:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Retrieve the file from GridFS
+    file = fs.find_one({"_id": file_id})
+    
+    if not file:
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    # Create a generator to stream the audio file
+    def file_iterator():
+        # Fetch the audio data in chunks
+        chunk_size = 1024 * 1024  # 1 MB chunks
+        with file as audio_file:
+            while True:
+                chunk = audio_file.read(chunk_size)
+                if not chunk:
+                    break
+                yield chunk
+
+    # Set the appropriate content type for audio streaming
+    response = StreamingHttpResponse(file_iterator(), content_type="audio/mp3")
+    
+    # Set the content-disposition header for inline viewing or download
+    response['Content-Disposition'] = f'inline; filename="{file.filename}"'
+    
+    return response
+
+def list_audios(request):
+    cached_data = cache.get("audio_list")
+    if cached_data:
+        return JsonResponse(cached_data, safe=False)
+
+    audios = Audio.objects.all()
+    data = [
+        {
+            "file_id": audio.file_id,
+        }
+        for audio in audios
+    ]
+
+    cache.set("audio_list", data, timeout=60)  # ✅ Cache for 60 seconds
+    return JsonResponse(data, safe=False)
+
+@api_view(['DELETE'])
+def delete_audio(request, file_id):
+    """
+    View to delete a video file from GridFS.
+    Args:
+        file_id: The ObjectId of the file in GridFS.
+    Returns:
+        JsonResponse confirming deletion or an error message.
+    """
+    try:
+        file_id = ObjectId(file_id)  # Convert file_id string to ObjectId
+    except Exception:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Check if the file exists in GridFS
+    if not fs.exists(file_id):
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    # Delete the file from GridFS
+    fs.delete(file_id)
+
+    return JsonResponse({"message": "Video deleted successfully"}, status=200)

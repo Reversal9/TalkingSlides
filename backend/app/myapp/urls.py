@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from .views import get_message, upload_pdf, view_pdf, delete_pdf, index, upload_video, list_videos, get_video, upload_avatar, get_avatar, get_audio
+from .views import get_message, upload_pdf, view_pdf, delete_pdf, index, upload_video, list_videos, get_video, upload_avatar, get_avatar, get_audio_gpt, upload_audio, list_audios, get_audio, delete_audio
 from . import views
 
 urlpatterns = [
@@ -32,6 +32,11 @@ urlpatterns = [
     # path("text-to-speech/", views.text_to_speech, name="text_to_speech"),
     path("list-video/", views.list_videos, name="list_videos"),
 
-    path("get-audio/", get_audio, name='get_audio'),
+    path("get-audio-gpt/", get_audio_gpt, name='get_audio_gpt'),
     
+
+    path("api/upload-audio/", upload_audio, name="upload_audio"),
+    path("api/audio/<str:file_id>/", get_audio, name="get_audio"),
+    path("api/audios/", list_audios, name="list_audios"),
+    path("api/delete-audio/<str:file_id>/", delete_audio, name="delete_audio"),
 ]
