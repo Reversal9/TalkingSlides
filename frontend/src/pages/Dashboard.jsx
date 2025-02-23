@@ -21,6 +21,7 @@ const Dashboard = () => {
                 Create Video
             </button> */}
             <UploadToPlay></UploadToPlay>
+            <AudioUploadAndPlay></AudioUploadAndPlay>
             <button onClick={() => logout({ returnTo: window.location.origin })}>
                 Logout
             </button>
