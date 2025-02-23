@@ -4,7 +4,6 @@ from openai import OpenAI
 import os
 
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 system_prompt = """
 You are a helpful assistant. You will be provided with a document delimited by triple quotes.
@@ -44,7 +43,7 @@ def parse_pdf_binary(binary_content):
     return delimited_text
         
 def generate_script(input_text):
-    client = OpenAI()
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     script = ""
     stream = client.chat.completions.create(
@@ -53,7 +52,7 @@ def generate_script(input_text):
             {"role": "developer", "content": system_prompt},
             {
                 "role": "user",
-                "content": "Convert these lecture notes into a presentation script."
+                "content": f"Convert these lecture notes into a presentation script. {input_text}"
             }
         ],
         stream=True,
