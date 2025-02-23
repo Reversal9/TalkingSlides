@@ -1,8 +1,6 @@
 from pathlib import Path
 from openai import OpenAI
 import os
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-
 
 def add_voice(input_script, speech_file_path):
     '''
@@ -14,7 +12,7 @@ def add_voice(input_script, speech_file_path):
     '''
     voice_opt = "alloy"
       
-    client = OpenAI()
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
     with client.audio.speech.create(
         model="tts-1",
         voice=voice_opt,
