@@ -24,7 +24,7 @@ import fitz  # PyMuPDF
 import openai
 import logging
 from io import BytesIO
-from ai import *
+from .ai import generate_text
 
 
 @api_view(['GET'])
@@ -226,6 +226,7 @@ def upload_pdf(request):
         binary_content = pdf_file.read()
 
         # Generate text from PDF
+        
         text = generate_text.parse_pdf_binary(binary_content)
         script = generate_text.generate_script(text)
 
