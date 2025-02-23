@@ -1,6 +1,7 @@
 # TalkingSlides
 
 ![Alt text](frontend/public/logo.PNG)
+
 ## Inspiration
 Students spend a significant portion of their day commuting, walking, or engaging in tasks that make traditional studying difficult. Talking Slides was created to help them learn on the go, transforming study materials into easily digestible audio. By enabling students to listen to lectures, notes, or presentations anytime, they can maximize productivity without sacrificing balance. This approach allows for a more flexible learning experience, helping them stay prepared while also freeing up time for other aspects of life. With Talking Slides, students can stay ahead—anytime, anywhere.
 
@@ -18,10 +19,10 @@ Gunicorn handles concurrent requests for deployment, and python-dotenv secures e
 One of the biggest challenges we faced was the deployment of the app. Originally, we aimed to build a generative video feature using Sync for AI-powered lip-syncing. However, Sync requires a URL, which can only be accessed through a third-party deployment service or if the app is already live. Due to the monorepo structure and technical limitations we encountered with Netlify, Vercel, and Render, we had to postpone this feature at the last minute. While this was a setback, it reinforced the importance of finding a scalable deployment solution, which we plan to revisit in the future.
 
 ## Accomplishments that we're proud of
-
+Despite the challenges—both technical and mental—we’re incredibly proud to have built a functional app that enhances how students study. Completing Talking Slides within the given time frame was a major achievement, and even more rewarding was the growth we experienced while learning new tools and technologies. Overcoming obstacles, adapting to new challenges, and expanding our skill set made this journey truly worthwhile.
 
 ## What we learned
-
+We entered this hackathon with a growth mindset and came away with valuable insights. We deepened our understanding of Django’s architecture, explored GridFS for efficient file storage, and tackled the complexities of using Sync for AI-driven lip-syncing. Deployment challenges with monorepos and third-party services taught us important lessons about scalability and infrastructure choices. Most importantly, every challenge reinforced our ability to adapt, problem-solve, and grow.
 
 ## What's next for Talking Slides
 The next step for Talking Slides is launching a fully functional web and mobile app, making it truly accessible on the go. This will give students the flexibility to engage with their study materials anytime, anywhere—whether commuting, walking, or multitasking. As we scale, we’re also prioritizing security to ensure user data remains protected.
