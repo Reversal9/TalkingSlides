@@ -18,10 +18,6 @@ def add_voice(input_script, speech_file_path):
         voice=voice_opt,
         input=input_script,
     ) 
-    with open(speech_file_path, "wb") as out_file:
-        out_file.write(response.context)
-    '''
-        response.stream_to_file(speech_file_path)
+    response.stream_to_file(speech_file_path)
 
-    '''
 

@@ -373,7 +373,7 @@ def get_audio(request):
             return JsonResponse({"error": "Missing file_id"}, status=400)
 
         # Process the audio file (Assuming add_voice is a function that processes the audio)
-        generate_audio.add_voice(script, "/out/out.mp3")
+        generate_audio.add_voice(script, "sample.mp3")
 
         return JsonResponse({"message": "Audio processed", "result": str("Hopium!")})
 
