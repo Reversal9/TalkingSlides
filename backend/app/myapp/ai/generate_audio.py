@@ -1,7 +1,7 @@
 from pathlib import Path
 from openai import OpenAI
 import os
-import generate_text
+from . import generate_text
 
 def add_voice(input_script):
     '''

@@ -240,11 +240,14 @@ def upload_pdf(request):
         text = generate_text.parse_pdf_binary(binary_content)
 
         script = ""
+        custom = request.POST.get("custom")
+        if not custom:
+            custom = ""
 
         if category == "Presentation":
-            script = generate_text.generate_script(text)
+            script = generate_text.generate_script(text, custom)
         else:
-            script = generate_text.generate_script_duo(text)
+            script = generate_text.generate_script_duo(text, custom)
 
         return JsonResponse({"message": "Pdf uploaded and created script", "script": str(script)})
 
@@ -375,9 +378,13 @@ def get_audio_gpt(request):
     """
     if request.method == "POST":
         script = request.POST.get("script")
+        category = request.POST.get("category")
 
         if not script:
             return JsonResponse({"error": "Missing script"}, status=400)
+
+        if not category:
+            return JsonResponse({"error": "Missing category"}, status=400)
 
         try:
             # Generate the audio content (assuming it returns raw bytes)
@@ -394,6 +401,7 @@ def get_audio_gpt(request):
             audio_metadata = Audio.objects.create(
                 # file=ContentFile(audio_content, name="audio.mp3"),  # Properly wrap bytes
                 file_id=str(audio_id),  # Store as string if using ObjectId
+                id=123,
             )
 
             # Create a StreamingHttpResponse to send the audio file in the response
