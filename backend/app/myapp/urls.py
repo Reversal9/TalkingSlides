@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.urls import path
-from .views import get_message, upload_pdf, view_pdf, delete_pdf, index, upload_video, list_videos, get_video
+from .views import get_message, upload_pdf, view_pdf, delete_pdf, index, upload_video, list_videos, get_video, upload_avatar, get_avatar
 from . import views
 
 urlpatterns = [
@@ -22,6 +22,10 @@ urlpatterns = [
     path("api/videos/", views.list_videos, name="list_videos"),
     path("api/delete-video/<str:file_id>/", views.delete_video, name="delete_video"),
     # path('api/generate-text/', views.generate_text, name='generate_text'),
+
+
+    path("api/upload-avatar/", views.upload_avatar, name="upload_avatar"),
+    path("api/avatar/<str:file_id>/", views.get_avatar, name="get_avatar"),
 
     path('webhook/', views.webhook_handler, name='webhook'),
 

@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from .forms import PdfUploadForm, VideoUploadForm
-from .models import Pdf, VideoMetadata
+from .models import Pdf, VideoMetadata, Avatar
 import gridfs
 from pymongo import MongoClient
 from django.views.decorators.csrf import csrf_exempt
@@ -87,6 +87,44 @@ THUMBNAIL_DIR = "media/thumbnails/"
 client = MongoClient(settings.DATABASES['default']['CLIENT']['host'])
 db = client[settings.DATABASES['default']['NAME']]
 fs = gridfs.GridFS(db)  # Initialize GridFS
+
+@csrf_exempt
+def upload_avatar(request):
+    if request.method == "POST" and request.FILES.get("avatar"):
+        image_file = request.FILES["avatar"]
+        image_id = fs.put(image_file, filename=image_file.name)
+
+        # Save metadata
+        avatar = Avatar.objects.create(
+            file=image_file,
+            file_id=image_id,
+        )
+
+        return JsonResponse({"message": "Image uploaded", "file_id": str(image_id)})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
+
+def get_avatar(request, file_id):
+    try:
+        # Convert the file_id to ObjectId
+        file_id = ObjectId(file_id)
+    except Exception:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Retrieve the file from GridFS
+    file = fs.find_one({"_id": file_id})
+    
+    if not file:
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    # Set the content type dynamically
+    content_type = file.content_type if file.content_type else "image/jpeg"
+
+    # Create a StreamingHttpResponse to send image data
+    response = StreamingHttpResponse(file, content_type=content_type)
+    response["Content-Disposition"] = f'inline; filename="{file.filename}"'
+
+    return response
 
 @csrf_exempt
 def upload_video(request):
