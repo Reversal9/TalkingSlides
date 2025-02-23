@@ -22,7 +22,7 @@ import fitz  # PyMuPDF
 import openai
 import logging
 from io import BytesIO
-from .ai import generate_text
+from .ai import generate_text, generate_audio
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from dotenv import load_dotenv
@@ -361,3 +361,20 @@ async def compile_video_endpoint(
 
 openai.api_key = settings.OPENAI_API_KEY
 
+@csrf_exempt
+def get_audio(request):
+    """
+    View to retrieve an audio file from GridFS using file_id and process it.
+    """
+    if request.method == "POST":
+        script = request.POST.get("script")
+
+        if not script:
+            return JsonResponse({"error": "Missing file_id"}, status=400)
+
+        # Process the audio file (Assuming add_voice is a function that processes the audio)
+        generate_audio.add_voice(script, "/out/out.mp3")
+
+        return JsonResponse({"message": "Audio processed", "result": str("Hopium!")})
+
+    return JsonResponse({"error": "Invalid request"}, status=400)
