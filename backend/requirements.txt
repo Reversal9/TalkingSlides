@@ -53,6 +53,7 @@ python-dotenv==1.0.1
 python-snappy==0.7.3
 pytz==2025.1
 requests==2.32.3
+re
 rich==13.9.4
 setuptools==75.8.0
 shellingham==1.5.4
