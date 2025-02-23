@@ -22,9 +22,13 @@ const UploadToPlay = () => {
         formData.append("pdf", pdfFile);
 
         try {
-            const response = await axios.post("http://127.0.0.1:8000/upload-pdf/", formData, {
-                headers: { "Content-Type": "multipart/form-data" },
-            });
+            const response = await axios.post(
+                "http://127.0.0.1:8000/upload-pdf/",
+                formData,
+                {
+                    headers: { "Content-Type": "multipart/form-data" },
+                },
+            );
 
             if (response.data.script) {
                 setScript(response.data.script);
@@ -48,9 +52,13 @@ const UploadToPlay = () => {
         formData.append("script", script);
 
         try {
-            const response = await axios.post("http://127.0.0.1:8000/get-audio/", formData, {
-                responseType: "blob", // To handle audio files
-            });
+            const response = await axios.post(
+                "http://127.0.0.1:8000/get-audio-gpt/",
+                formData,
+                {
+                    responseType: "blob", // To handle audio files
+                },
+            );
 
             const audioURL = URL.createObjectURL(response.data);
             setAudioSrc(audioURL);
