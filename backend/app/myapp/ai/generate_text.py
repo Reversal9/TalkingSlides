@@ -100,7 +100,7 @@ def generate_script(input_text, input_prompt):
 
 
 def generate_script_duo(input_text, input_prompt):
-    client = OpenAI(api_key=OPENAI_API_KEY)
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     script = ""
     stream = client.chat.completions.create(
