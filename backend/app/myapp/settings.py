@@ -134,6 +134,7 @@ CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True  # ✅ Allows sending cookies & authentication headers
 CORS_ORIGIN_ALLOW_ALL = True  # Older versions use this instead of `CORS_ALLOW_ALL_ORIGINS`
 
+# ✅ Allow All Methods
 CORS_ALLOW_METHODS = [
     "GET",
     "POST",
@@ -143,12 +144,15 @@ CORS_ALLOW_METHODS = [
     "OPTIONS",
 ]
 
+# ✅ Allow All Headers
 CORS_ALLOW_HEADERS = [
-    "content-type",
+    "accept",
     "authorization",
+    "content-type",
+    "user-agent",
     "x-csrftoken",
+    "x-requested-with",
 ]
-
 # Load environment definition file
 
 ENV_FILE = find_dotenv()
