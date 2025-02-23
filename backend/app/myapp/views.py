@@ -426,7 +426,7 @@ def get_audio_gpt(request):
             return response
 
         except Exception as e:
-            return JsonResponse({"error": f"Audio generation failed: {str(e)}"}, status=500)
+            return JsonResponse({"error": f"Audio generation failed: {str(e)}"}, status=509)
 
     return JsonResponse({"error": "Invalid request"}, status=400)
 

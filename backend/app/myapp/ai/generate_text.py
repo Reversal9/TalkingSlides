@@ -10,13 +10,13 @@ You are a helpful assistant. You will be provided with a document delimited by t
 Your goal is to convert the text in the document to a presentation script for a video.
 Divide the script into sections that are at most 3 minutes long. Assign each second to two different speakers,
 speaker 1 and speaker 2. Label each section with [SPEAKER #1] or [SPEAKER #2]. The two speakers are having a discussion
-with each other and building off of each others' ideas. 
+with each other and building off of each others' ideas. Make sure that the script must be less than 2000 characters.
 """
 
 system_prompt_solo = """
 You are a helpful assistant. You will be provided with a document delimited by triple quotes.
 Your goal is to convert the text in the document to a presentation script for a video.
-Divide the script into sections that are at most 3 minutes long. The script should be like a single-person podcast.
+Divide the script into sections that are at most 3 minutes long. The script should be like a single-person podcast. Make sure that the script must be less than 4000 characters.
 """ 
 
 script_formatter_duo = """
@@ -26,7 +26,7 @@ Line of dialogue.
 [SPEAKER #2]
 Line of dialogue.
 """
-script_formatter_solo = """
+script_formatter = """
 
 """
 def parse_pdf(filename):
@@ -82,7 +82,7 @@ def generate_script(input_text, input_prompt):
             {"role": "developer", "content": system_prompt_solo},
             {
                 "role": "user",
-                "content": f"Convert these lecture notes into a presentation script, {input_prompt}.Here are the notes: {input_text}"
+                "content": f"Convert these lecture notes into a presentation script with a hard limit of 4000 characters, {input_prompt}.Here are the notes: {input_text}"
             }
         ],
         stream=True,
@@ -109,7 +109,7 @@ def generate_script_duo(input_text, input_prompt):
             {"role": "developer", "content": system_prompt_duo},
             {
                 "role": "user",
-                "content": f"Convert these lecture notes into a presentation script with these specifications: {input_prompt}. Here are the notes: {input_text}.",
+                "content": f"Convert these lecture notes into a presentation script with a hard limit of 2000 characters with these specifications: {input_prompt}. Here are the notes: {input_text}.",
             }
         ],
         stream=True,

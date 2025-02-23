@@ -47,7 +47,7 @@ def add_voice_dialogue(script_text, voice_opt1, voice_opt2):
           input=text,
       )
       requests += 1
-      response.stream_to_file(f"speaker1{filenum}.mp3")
+      # response.stream_to_file(f"speaker1{filenum}.mp3")
       filenum += 1
       if not (response and response.content):
         return None
@@ -63,7 +63,7 @@ def add_voice_dialogue(script_text, voice_opt1, voice_opt2):
           input=text,
       )
       requests += 1
-      response.stream_to_file(f"speaker2{filenum}.mp3")
+      # response.stream_to_file(f"speaker2{filenum}.mp3")
       filenum += 1
       if not (response and response.content):
         return None
