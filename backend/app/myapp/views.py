@@ -372,8 +372,23 @@ def get_audio(request):
         if not script:
             return JsonResponse({"error": "Missing file_id"}, status=400)
 
-        # Process the audio file (Assuming add_voice is a function that processes the audio)
-        generate_audio.add_voice(script, "sample.mp3")
+        try:
+            # Generate the audio and get the raw content
+            audio_content = generate_audio.add_voice(script)
+
+            # Create a memory buffer to hold the audio content
+            audio_file = BytesIO(audio_content)
+
+            # Create a StreamingHttpResponse to send the audio file in the response
+            response = StreamingHttpResponse(audio_file, content_type="audio/mp3")
+
+            # Set the Content-Disposition header for inline viewing or download
+            response['Content-Disposition'] = 'inline; filename="audio.mp3"'
+
+            return response
+
+        except Exception as e:
+            return JsonResponse({"error": f"Audio generation failed: {str(e)}"}, status=500)
 
         return JsonResponse({"message": "Audio processed", "result": str("Hopium!")})
 
