@@ -3,9 +3,6 @@ import Popup from "../components/Popup";
 import '../styles.css';
 import { useNavigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";  // <-- Import Auth0 Hook
-import UploadPDF from '../components/UploadPDF';
-import DeletePDF from '../components/DeletePDF';
-import ViewPDF from '../components/ViewPDF';
 import TextToSpeech from '../components/TextToSpeech';
 import VideoUploadAndPlay from '../components/VideoUploadAndPlay';
 
