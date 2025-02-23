@@ -54,9 +54,12 @@ const AudioUploadAndPlay = () => {
     // Play selected audio
     const handlePlayAudio = async (fileId) => {
         try {
-            const response = await axios.get(`http://127.0.0.1:8000/api/audio/${fileId}/`, {
-                responseType: "blob",
-            });
+            const response = await axios.get(
+                `http://127.0.0.1:8000/api/audio/${fileId}/`,
+                {
+                    responseType: "blob",
+                },
+            );
 
             const audioURL = URL.createObjectURL(response.data);
             setAudioSrc(audioURL);
@@ -69,7 +72,9 @@ const AudioUploadAndPlay = () => {
 
     // Delete audio file
     const handleDeleteAudio = async (fileId) => {
-        const confirmDelete = window.confirm("Are you sure you want to delete this audio?");
+        const confirmDelete = window.confirm(
+            "Are you sure you want to delete this audio?",
+        );
         if (!confirmDelete) return;
 
         try {
@@ -82,6 +87,26 @@ const AudioUploadAndPlay = () => {
         }
     };
 
+    // Play selected audio
+    const handleDownloadAudio = async (fileId) => {
+        try {
+            const response = await axios.get(
+                `http://127.0.0.1:8000/api/audio/${fileId}/`,
+                {
+                    responseType: "blob",
+                },
+            );
+
+            const audioURL = URL.createObjectURL(response.data);
+            const link = document.createElement("a");
+            link.href = audioURL;
+            link.download = "audio.mp3"; // Optional: Specify the file name
+            link.click(); // Trigger the download
+        } catch (error) {
+            console.error("Error fetching audio:", error);
+            alert("Failed to play audio.");
+        }
+    };
     return (
         <div>
             <h2>Upload Audio</h2>
@@ -93,8 +118,15 @@ const AudioUploadAndPlay = () => {
                 {audios.length > 0 ? (
                     audios.map((audio) => (
                         <li key={audio.file_id}>
-                            <button onClick={() => handlePlayAudio(audio.file_id)}>🎵 Play Audio</button>
-                            <button onClick={() => handleDeleteAudio(audio.file_id)}>❌ Delete</button>
+                            <button onClick={() => handlePlayAudio(audio.file_id)}>
+                                🎵 Play Audio
+                            </button>
+                            <button onClick={() => handleDeleteAudio(audio.file_id)}>
+                                ❌ Delete
+                            </button>
+                            <button onClick={() => handleDownloadAudio(audio.file_id)}>
+                                Download
+                            </button>
                         </li>
                     ))
                 ) : (
