@@ -37,9 +37,10 @@ def parse_pdf_binary(binary_content):
     for page in doc: 
         page_text = page.get_text("blocks")  
         for block in page_text:
-            delimited_text += block
+            delimited_text += block[4]
             delimited_text += "[Section {page_num}]\n"
         page_num += 1
+    doc.close()
     return delimited_text
         
 def generate_script(input_text):
