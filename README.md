@@ -15,7 +15,7 @@ The frontend, built with React, integrates React Router for navigation and Frame
 Gunicorn handles concurrent requests for deployment, and python-dotenv secures environment variables. This modern, efficient stack ensures Talking Slides is scalable, performant, and user-friendly, making learning more accessible.
 
 ## Challenges we ran into
-
+One of the biggest challenges we faced was the deployment of the app. Originally, we aimed to build a generative video feature using Sync for AI-powered lip-syncing. However, Sync requires a URL, which can only be accessed through a third-party deployment service or if the app is already live. Due to the monorepo structure and technical limitations we encountered with Netlify, Vercel, and Render, we had to postpone this feature at the last minute. While this was a setback, it reinforced the importance of finding a scalable deployment solution, which we plan to revisit in the future.
 
 ## Accomplishments that we're proud of
 
