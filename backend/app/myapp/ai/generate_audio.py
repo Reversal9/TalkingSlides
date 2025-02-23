@@ -13,10 +13,15 @@ def add_voice(input_script, speech_file_path):
     voice_opt = "alloy"
     
     client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
-    with client.audio.speech.create(
+    response = client.audio.speech.create(
         model="tts-1",
         voice=voice_opt,
         input=input_script,
-    ) as response: 
+    ) 
+    with open(speech_file_path, "wb") as out_file:
+        out_file.write(response.context)
+    '''
         response.stream_to_file(speech_file_path)
+
+    '''
 
