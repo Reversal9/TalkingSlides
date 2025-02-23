@@ -379,6 +379,14 @@ def get_audio_gpt(request):
     if request.method == "POST":
         script = request.POST.get("script")
         category = request.POST.get("category")
+        voice_opt1 = request.POST.get("voice_opt1")
+        voice_opt2 = request.POST.get("voice_opt2")
+
+        if not voice_opt1:
+            voice_opt1 = "onyx"
+
+        if not voice_opt2:
+            voice_opt2 = "alloy"
 
         if not script:
             return JsonResponse({"error": "Missing script"}, status=400)
@@ -388,11 +396,15 @@ def get_audio_gpt(request):
 
         try:
             # Generate the audio content (assuming it returns raw bytes)
-            audio_content = generate_audio.add_voice(script)
+            audio_file = None
 
-            # Create a memory buffer to hold the audio content
-            audio_file = BytesIO(audio_content)
-            audio_file.seek(0)  # Reset buffer position
+            if category == "Presentation":
+                audio_content = generate_audio.add_voice(script, voice_opt1)
+                # Create a memory buffer to hold the audio content
+                audio_file = BytesIO(audio_content)
+                audio_file.seek(0)  # Reset buffer position
+            else:
+                audio_file = generate_audio.add_voice_dialogue(script, voice_opt1, voice_opt2)
 
             # Store in GridFS
             audio_id = fs.put(audio_file, filename="audio.mp3")
