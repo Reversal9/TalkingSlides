@@ -36,7 +36,7 @@ markdown-it-py==3.0.0
 mdurl==0.1.2
 modal==0.73.64
 multidict==6.1.0
-openai==1.55.3
+openai==1.64.0
 pillow==11.1.0
 propcache==0.3.0
 protobuf==5.29.3
