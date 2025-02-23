@@ -23,6 +23,13 @@ import openai
 import logging
 from io import BytesIO
 from .ai import generate_text
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+from dotenv import load_dotenv
+import base64
+from django.conf import settings  # ✅ Import settings
+from openai import OpenAIError, AuthenticationError, RateLimitError  # ✅ Correct import
+from django.core.cache import cache
 
 @api_view(['GET'])
 def get_message(request):
