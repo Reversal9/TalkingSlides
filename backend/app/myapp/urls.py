@@ -20,7 +20,7 @@ urlpatterns = [
     path("api/upload/", views.upload_video, name="upload_video"),
     path("api/video/<str:file_id>/", views.get_video, name="get_video"),
     path("api/videos/", views.list_videos, name="list_videos"),
-
+    path("api/delete-video/<str:file_id>/", views.delete_video, name="delete_video"),
     # path('api/generate-text/', views.generate_text, name='generate_text'),
 
     path('webhook/', views.webhook_handler, name='webhook'),
