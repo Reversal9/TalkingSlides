@@ -1,20 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import Popup from "../components/Popup";
-import '../styles.css';
+import "../styles.css";
 import { useNavigate } from "react-router-dom";
-import { useAuth0 } from "@auth0/auth0-react";  // <-- Import Auth0 Hook
-<<<<<<< HEAD
-import UploadPDF from '../components/UploadPDF';
-import DeletePDF from '../components/DeletePDF';
-import ViewPDF from '../components/ViewPDF';
-import UploadAndPrompt from '../components/UploadAndPrompt';
-=======
-import TextToSpeech from '../components/TextToSpeech';
-import VideoUploadAndPlay from '../components/VideoUploadAndPlay';
->>>>>>> main
+import { useAuth0 } from "@auth0/auth0-react"; // <-- Import Auth0 Hook
+import TextToSpeech from "../components/TextToSpeech";
+import VideoUploadAndPlay from "../components/VideoUploadAndPlay";
 
 const Dashboard = () => {
-    const { logout } = useAuth0();  // <-- Get logout function from Auth0
+    const { logout } = useAuth0(); // <-- Get logout function from Auth0
     const [isPopupOpen, setIsPopupOpen] = useState(false);
     const navigate = useNavigate();
     const openPopup = () => setIsPopupOpen(true);
