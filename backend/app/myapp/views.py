@@ -370,19 +370,30 @@ def get_audio_gpt(request):
         script = request.POST.get("script")
 
         if not script:
-            return JsonResponse({"error": "Missing file_id"}, status=400)
+            return JsonResponse({"error": "Missing script"}, status=400)
 
         try:
-            # Generate the audio and get the raw content
+            # Generate the audio content (assuming it returns raw bytes)
             audio_content = generate_audio.add_voice(script)
 
             # Create a memory buffer to hold the audio content
             audio_file = BytesIO(audio_content)
+            audio_file.seek(0)  # Reset buffer position
+
+            # Store in GridFS
+            audio_id = fs.put(audio_file, filename="audio.mp3")
+
+            # Save metadata in Django model
+            audio_metadata = Audio.objects.create(
+                # file=ContentFile(audio_content, name="audio.mp3"),  # Properly wrap bytes
+                file_id=str(audio_id),  # Store as string if using ObjectId
+            )
 
             # Create a StreamingHttpResponse to send the audio file in the response
+            audio_file.seek(0)  # Reset buffer position again before reading
             response = StreamingHttpResponse(audio_file, content_type="audio/mp3")
 
-            # Set the Content-Disposition header for inline viewing or download
+            # Set Content-Disposition header
             response['Content-Disposition'] = 'inline; filename="audio.mp3"'
 
             return response
@@ -390,10 +401,7 @@ def get_audio_gpt(request):
         except Exception as e:
             return JsonResponse({"error": f"Audio generation failed: {str(e)}"}, status=500)
 
-        return JsonResponse({"message": "Audio processed", "result": str("Hopium!")})
-
     return JsonResponse({"error": "Invalid request"}, status=400)
-
 
 
 @csrf_exempt

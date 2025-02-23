@@ -6,6 +6,7 @@ import { useAuth0 } from "@auth0/auth0-react"; // <-- Import Auth0 Hook
 import TextToSpeech from "../components/TextToSpeech";
 import VideoUploadAndPlay from "../components/VideoUploadAndPlay";
 import UploadToPlay from "../components/UploadToAudio";
+import AudioUploadAndPlay from "../components/AudioUploadAndPlay";
 
 const Dashboard = () => {
     const { logout } = useAuth0(); // <-- Get logout function from Auth0
