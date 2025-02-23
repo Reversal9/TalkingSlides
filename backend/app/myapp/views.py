@@ -1,5 +1,3 @@
-# views.py
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, FileResponse, Http404, JsonResponse, StreamingHttpResponse
 from rest_framework.decorators import api_view
@@ -25,6 +23,16 @@ import openai
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from dotenv import load_dotenv
+import base64
+from django.conf import settings  # ✅ Import settings
+import openai
+from openai import OpenAIError, AuthenticationError, RateLimitError  # ✅ Correct import
+from django.core.cache import cache
+
+# ✅ Set OpenAI API Key from Django settings
+openai.api_key = settings.OPENAI_API_KEY  # ✅ Correct way to access it
+
+
 
 @api_view(['GET'])
 def get_message(request):
@@ -47,27 +55,8 @@ oauth.register(
     client_kwargs={"scope": "openid profile email"},
 )
 
-# oauth.register(
-#     "auth0",
-#     client_id=settings.AUTH0_CLIENT_ID,
-#     client_secret=settings.AUTH0_CLIENT_SECRET,
-#     client_kwargs={
-#         "scope": "openid profile email",
-#     },
-#     server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
-# )
-
-
 def index(request):
     return redirect("http://localhost:5173/")
-    # return render(
-        # request,
-        # "index.html",
-        # context={
-        #     "session": request.session.get("user"),
-        #     "pretty": json.dumps(request.session.get("user"), indent=4),
-        # },
-    # )
 
 def callback(request):
     try:
@@ -79,19 +68,8 @@ def callback(request):
         print("Auth0 callback error:", str(e))
         return redirect("/") 
     
-# def callback(request):
-#     token = oauth.auth0.authorize_access_token(request)
-#     request.session["user"] = token
-#     return redirect(request.build_absolute_uri(reverse("index")))
-
 def login(request):
     return oauth.auth0.authorize_redirect(request, request.build_absolute_uri("/callback"))
-
-# def login(request):
-#     return oauth.auth0.authorize_redirect(
-#         request, request.build_absolute_uri(reverse("callback"))
-#     )
-
 
 def logout(request):
     request.session.clear()
@@ -183,16 +161,12 @@ def get_video(request, file_id):
     response['Content-Disposition'] = f'inline; filename="{file.filename}"'
     
     return response
-# def get_video(request, file_id):
-#     file = fs.find_one({"_id": file_id})
-#     if not file:
-#         return JsonResponse({"error": "File not found"}, status=404)
-
-#     response = StreamingHttpResponse(file, content_type="video/mp4")
-#     response["Content-Disposition"] = f'inline; filename="{file.filename}"'
-#     return response
 
 def list_videos(request):
+    cached_data = cache.get("video_list")
+    if cached_data:
+        return JsonResponse(cached_data, safe=False)
+
     videos = VideoMetadata.objects.all()
     data = [
         {
@@ -202,8 +176,9 @@ def list_videos(request):
         }
         for video in videos
     ]
-    return JsonResponse(data, safe=False)
 
+    cache.set("video_list", data, timeout=60)  # ✅ Cache for 60 seconds
+    return JsonResponse(data, safe=False)
 
 @csrf_exempt
 def upload_pdf(request):
@@ -234,7 +209,6 @@ def upload_pdf(request):
     # else:
     #     form = PdfUploadForm()
     # return render(request, 'upload_pdf.html', {'form': form})
-
 
 def view_pdf(request, file_id):
     """
@@ -286,19 +260,28 @@ def delete_pdf(request, pdf_id):
     pdf_instance.delete()       # Deletes the model instance from the database.
     return HttpResponse("PDF deleted successfully!")
 
-def delete_video(request, video_id):
+@api_view(['DELETE'])
+def delete_video(request, file_id):
     """
-    View to delete a video file.
-    Removes the file from the storage (GridFS) and deletes the associated model instance.
+    View to delete a video file from GridFS.
     Args:
-        video_id: The primary key of the video model instance.
+        file_id: The ObjectId of the file in GridFS.
     Returns:
-        HttpResponse confirming deletion.
+        JsonResponse confirming deletion or an error message.
     """
-    video_instance = get_object_or_404(VideoMetadata, id=video_id)
-    video_instance.file.delete()  # Deletes the file from GridFSStorage.
-    video_instance.delete()       # Deletes the model instance from the database.
-    return HttpResponse("video deleted successfully!")
+    try:
+        file_id = ObjectId(file_id)  # Convert file_id string to ObjectId
+    except Exception:
+        return JsonResponse({"error": "Invalid file ID"}, status=400)
+
+    # Check if the file exists in GridFS
+    if not fs.exists(file_id):
+        return JsonResponse({"error": "File not found"}, status=404)
+
+    # Delete the file from GridFS
+    fs.delete(file_id)
+
+    return JsonResponse({"message": "Video deleted successfully"}, status=200)
 
 def webhook_handler(request):
     if (request.method != "POST"): 
@@ -310,6 +293,7 @@ def webhook_handler(request):
         return Response({"message" : "processing completed successfully."})
     else:
         return Response({"message": "processing failed."})
+
 '''
 @app.post("/compile_video/")
 async def compile_video_endpoint(
@@ -334,37 +318,5 @@ async def compile_video_endpoint(
         return JSONResponse({"error": str(e)}, status_code=500)
 '''
 
-# OpenAI API Key (Store this securely!)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = settings.OPENAI_API_KEY
 
-@csrf_exempt
-def text_to_speech(request):
-    """
-    Converts text to speech using OpenAI's TTS API and returns the audio file.
-    """
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
-
-    text = request.POST.get("text", "")
-    if not text:
-        return JsonResponse({"error": "Missing text"}, status=400)
-
-    try:
-        # Call OpenAI's TTS API
-        openai.api_key = OPENAI_API_KEY
-        response = openai.audio.speech.create(
-            model="tts-1",
-            voice="alloy",  # Options: alloy, echo, fable, onyx, nova, shimmer
-            input=text
-        )
-
-        # Save the audio to a file
-        audio_path = "media/output_audio.mp3"
-        with open(audio_path, "wb") as audio_file:
-            audio_file.write(response["content"])
-
-        return FileResponse(open(audio_path, "rb"), content_type="audio/mpeg")
-
-    except Exception as e:
-        print("Error generating speech:", str(e))
-        return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
