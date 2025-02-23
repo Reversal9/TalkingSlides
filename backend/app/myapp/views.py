@@ -414,6 +414,7 @@ def upload_audio(request):
         audio_metadata = Audio.objects.create(
             file=audio_file,
             file_id=audio_id,
+            id=123,
         )
 
         return JsonResponse({"message": "audio uploaded", "audio_id": str(audio_id)})
@@ -487,7 +488,16 @@ def delete_audio(request, file_id):
     if not fs.exists(file_id):
         return JsonResponse({"error": "File not found"}, status=404)
 
-    # Delete the file from GridFS
-    fs.delete(file_id)
+    try:
+        audio_obj = Audio.objects.get(file_id=str(file_id))  # Convert ObjectId back to string
+    except Audio.DoesNotExist:
+        return JsonResponse({"error": "Audio not found"}, status=404)
 
-    return JsonResponse({"message": "Video deleted successfully"}, status=200)
+    # Ensure the Audio object has a valid ID before attempting deletion
+    if audio_obj.id is None:
+        return JsonResponse({"error": "Audio object is not properly saved"}, status=500)
+
+    fs.delete(file_id)
+    audio_obj.delete()
+
+    return JsonResponse({"message": "Audio deleted successfully"}, status=200)
