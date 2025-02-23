@@ -5,6 +5,35 @@ const UploadToPlay = () => {
   const [pdfFile, setPdfFile] = useState(null);
   const [script, setScript] = useState("");
   const [audioSrc, setAudioSrc] = useState("");
+  const [category, setCategory] = useState(null);
+
+  const handleCategorySelect = (category) => {
+    setCategory(category);
+  };
+
+  const AudioCategoryComponent = () => {
+    return (
+      <div>
+        <button
+          onClick={() => handleCategorySelect("presentation")}
+          style={{
+            backgroundColor:
+              category === "presentation" ? "#4CAF50" : "#f1f1f1",
+          }}
+        >
+          Presentation
+        </button>
+        <button
+          onClick={() => handleCategorySelect("podcast")}
+          style={{
+            backgroundColor: category === "podcast" ? "#4CAF50" : "#f1f1f1",
+          }}
+        >
+          Podcast
+        </button>
+      </div>
+    );
+  };
 
   // Handle file selection
   const handleFileChange = (event) => {
@@ -18,8 +47,14 @@ const UploadToPlay = () => {
       return;
     }
 
+    if (!category) {
+      alert("Please select a category first.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("pdf", pdfFile);
+    formData.append("category", category);
 
     try {
       const response = await axios.post(
@@ -48,8 +83,14 @@ const UploadToPlay = () => {
       return;
     }
 
+    if (!category) {
+      alert("Please select a category first.");
+      return;
+    }
+
     const formData = new FormData();
     formData.append("script", script);
+    formData.append("category", category);
 
     try {
       const response = await axios.post(
@@ -71,6 +112,7 @@ const UploadToPlay = () => {
   return (
     <div>
       <h2>Upload PDF and Generate Audio</h2>
+      <AudioCategoryComponent />
       <input type="file" accept="application/pdf" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload PDF</button>
 

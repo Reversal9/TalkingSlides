@@ -221,8 +221,9 @@ def upload_pdf(request):
     View to handle PDF uploads via a form.
     Renders a template with the upload form and saves the PDF upon submission.
     """
-    if request.method == "POST" and request.FILES.get("pdf"):
+    if request.method == "POST" and request.FILES.get("pdf") and request.POST.get("category"):
         pdf_file = request.FILES["pdf"]
+        category = script = request.POST.get("category")
         
         # Save the PDF file to GridFS and retrieve the file_id
         # file_id = fs.put(pdf_file, filename=pdf_file.name)
@@ -235,9 +236,15 @@ def upload_pdf(request):
         binary_content = pdf_file.read()
 
         # Generate text from PDF
-        
+
         text = generate_text.parse_pdf_binary(binary_content)
-        script = generate_text.generate_script(text)
+
+        script = ""
+
+        if category == "Presentation":
+            script = generate_text.generate_script(text)
+        else:
+            script = generate_text.generate_script_duo(text)
 
         return JsonResponse({"message": "Pdf uploaded and created script", "script": str(script)})
 
