@@ -18,21 +18,18 @@ from django.urls import reverse
 from urllib.parse import quote_plus, urlencode
 import os
 from bson import ObjectId
+import fitz  # PyMuPDF
 import openai
-# from pdfminer.high_level import extract_text
+import logging
+from io import BytesIO
+from .ai import generate_text
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from dotenv import load_dotenv
 import base64
 from django.conf import settings  # ✅ Import settings
-import openai
 from openai import OpenAIError, AuthenticationError, RateLimitError  # ✅ Correct import
 from django.core.cache import cache
-
-# ✅ Set OpenAI API Key from Django settings
-openai.api_key = settings.OPENAI_API_KEY  # ✅ Correct way to access it
-
-
 
 @api_view(['GET'])
 def get_message(request):
@@ -190,15 +187,21 @@ def upload_pdf(request):
         pdf_file = request.FILES["pdf"]
         
         # Save the PDF file to GridFS and retrieve the file_id
-        file_id = fs.put(pdf_file, filename=pdf_file.name)
+        # file_id = fs.put(pdf_file, filename=pdf_file.name)
 
         # Save the file_id into the Pdf model
-        pdf = Pdf.objects.create(
-            file=pdf_file,
-            file_id=file_id,
-        )
+        # pdf = Pdf.objects.create(
+        #     file=pdf_file,
+        #     file_id=file_id,
+        # )
+        binary_content = pdf_file.read()
 
-        return JsonResponse({"message": "Pdf uploaded", "file_id": str(file_id)})
+        # Generate text from PDF
+        
+        text = generate_text.parse_pdf_binary(binary_content)
+        script = generate_text.generate_script(text)
+
+        return JsonResponse({"message": "Pdf uploaded and created script", "script": str(script)})
 
     return JsonResponse({"error": "Invalid request"}, status=400)
     # if request.method == "POST":

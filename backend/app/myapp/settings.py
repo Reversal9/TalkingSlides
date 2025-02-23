@@ -130,13 +130,9 @@ STATIC_URL = 'static/'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ✅ Allow All Origins (For Development)
-CORS_ALLOW_ALL_ORIGINS = True  
-
-# ✅ OR Allow Specific Origins (More Secure)
-CORS_ALLOWED_ORIGINS = [
-    '*'
-]
+CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True  # ✅ Allows sending cookies & authentication headers
+CORS_ORIGIN_ALLOW_ALL = True  # Older versions use this instead of `CORS_ALLOW_ALL_ORIGINS`
 
 # ✅ Allow All Methods
 CORS_ALLOW_METHODS = [

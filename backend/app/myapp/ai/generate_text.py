@@ -3,7 +3,7 @@ import openai
 from openai import OpenAI
 import os
 
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+
 
 system_prompt = """
 You are a helpful assistant. You will be provided with a document delimited by triple quotes.
@@ -27,9 +27,23 @@ def parse_pdf(filename):
             delimited_text += "[Section {page_num}]\n"
         page_num += 1
     return delimited_text
+
+def parse_pdf_binary(binary_content):
+    doc = pymupdf.open(stream=binary_content,filetype="pdf")
+    delimited_text = ""
+    num_pages = doc.page_count
+    page_num = 0
+    for page in doc: 
+        page_text = page.get_text("blocks")  
+        for block in page_text:
+            delimited_text += block[4]
+            delimited_text += "[Section {page_num}]\n"
+        page_num += 1
+    doc.close()
+    return delimited_text
         
 def generate_script(input_text):
-    client = OpenAI()
+    client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
     script = ""
     stream = client.chat.completions.create(
@@ -38,7 +52,7 @@ def generate_script(input_text):
             {"role": "developer", "content": system_prompt},
             {
                 "role": "user",
-                "content": "Convert these lecture notes into a presentation script."
+                "content": f"Convert these lecture notes into a presentation script. {input_text}"
             }
         ],
         stream=True,
