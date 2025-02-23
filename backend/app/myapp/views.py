@@ -1,5 +1,3 @@
-# views.py
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpResponse, FileResponse, Http404, JsonResponse, StreamingHttpResponse
 from rest_framework.decorators import api_view
@@ -25,6 +23,16 @@ import openai
 from django.core.files.storage import default_storage
 from django.core.files.base import ContentFile
 from dotenv import load_dotenv
+import base64
+from django.conf import settings  # ✅ Import settings
+import openai
+from openai import OpenAIError, AuthenticationError, RateLimitError  # ✅ Correct import
+from django.core.cache import cache
+
+# ✅ Set OpenAI API Key from Django settings
+openai.api_key = settings.OPENAI_API_KEY  # ✅ Correct way to access it
+
+
 
 @api_view(['GET'])
 def get_message(request):
@@ -47,27 +55,8 @@ oauth.register(
     client_kwargs={"scope": "openid profile email"},
 )
 
-# oauth.register(
-#     "auth0",
-#     client_id=settings.AUTH0_CLIENT_ID,
-#     client_secret=settings.AUTH0_CLIENT_SECRET,
-#     client_kwargs={
-#         "scope": "openid profile email",
-#     },
-#     server_metadata_url=f"https://{settings.AUTH0_DOMAIN}/.well-known/openid-configuration",
-# )
-
-
 def index(request):
     return redirect("http://localhost:5173/")
-    # return render(
-        # request,
-        # "index.html",
-        # context={
-        #     "session": request.session.get("user"),
-        #     "pretty": json.dumps(request.session.get("user"), indent=4),
-        # },
-    # )
 
 def callback(request):
     try:
@@ -79,19 +68,8 @@ def callback(request):
         print("Auth0 callback error:", str(e))
         return redirect("/") 
     
-# def callback(request):
-#     token = oauth.auth0.authorize_access_token(request)
-#     request.session["user"] = token
-#     return redirect(request.build_absolute_uri(reverse("index")))
-
 def login(request):
     return oauth.auth0.authorize_redirect(request, request.build_absolute_uri("/callback"))
-
-# def login(request):
-#     return oauth.auth0.authorize_redirect(
-#         request, request.build_absolute_uri(reverse("callback"))
-#     )
-
 
 def logout(request):
     request.session.clear()
@@ -183,16 +161,12 @@ def get_video(request, file_id):
     response['Content-Disposition'] = f'inline; filename="{file.filename}"'
     
     return response
-# def get_video(request, file_id):
-#     file = fs.find_one({"_id": file_id})
-#     if not file:
-#         return JsonResponse({"error": "File not found"}, status=404)
-
-#     response = StreamingHttpResponse(file, content_type="video/mp4")
-#     response["Content-Disposition"] = f'inline; filename="{file.filename}"'
-#     return response
 
 def list_videos(request):
+    cached_data = cache.get("video_list")
+    if cached_data:
+        return JsonResponse(cached_data, safe=False)
+
     videos = VideoMetadata.objects.all()
     data = [
         {
@@ -202,8 +176,9 @@ def list_videos(request):
         }
         for video in videos
     ]
-    return JsonResponse(data, safe=False)
 
+    cache.set("video_list", data, timeout=60)  # ✅ Cache for 60 seconds
+    return JsonResponse(data, safe=False)
 
 @csrf_exempt
 def upload_pdf(request):
@@ -234,7 +209,6 @@ def upload_pdf(request):
     # else:
     #     form = PdfUploadForm()
     # return render(request, 'upload_pdf.html', {'form': form})
-
 
 def view_pdf(request, file_id):
     """
@@ -310,6 +284,7 @@ def webhook_handler(request):
         return Response({"message" : "processing completed successfully."})
     else:
         return Response({"message": "processing failed."})
+
 '''
 @app.post("/compile_video/")
 async def compile_video_endpoint(
@@ -334,69 +309,46 @@ async def compile_video_endpoint(
         return JSONResponse({"error": str(e)}, status_code=500)
 '''
 
-# OpenAI API Key (Store this securely!)
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+openai.api_key = settings.OPENAI_API_KEY
 
 @csrf_exempt
 def text_to_speech(request):
-    """
-    Converts text to speech using OpenAI's TTS API and returns the audio file.
-    """
-    if request.method != "POST":
-        return JsonResponse({"error": "Invalid request method"}, status=400)
+    if request.method == 'POST':
+        try:
+            data = json.loads(request.body)
+            text = data.get("text", "")
 
-    text = request.POST.get("text", "")
-    if not text:
-        return JsonResponse({"error": "Missing text"}, status=400)
+            if not text:
+                return JsonResponse({"error": "No text provided"}, status=400)
 
-    try:
-        # Call OpenAI's TTS API
-        openai.api_key = OPENAI_API_KEY
-        response = openai.audio.speech.create(
-            model="tts-1",
-            voice="alloy",  # Options: alloy, echo, fable, onyx, nova, shimmer
-            input=text
-        )
+            if not openai.api_key:
+                return JsonResponse({"error": "OpenAI API key is missing"}, status=500)
 
-        # Save the audio to a file
-        audio_path = "media/output_audio.mp3"
-        with open(audio_path, "wb") as audio_file:
-            audio_file.write(response["content"])
+            # ✅ Correct OpenAI API Call
+            response = openai.audio.speech.create(
+                model="tts-1",
+                voice="alloy",
+                input=text
+            )
 
-        return FileResponse(open(audio_path, "rb"), content_type="audio/mpeg")
+            # ✅ Ensure response contains data
+            audio_data = response.get("data")
 
-    except Exception as e:
-        print("Error generating speech:", str(e))
-        return JsonResponse({"error": "Internal server error", "details": str(e)}, status=500)
+            if not audio_data:
+                return JsonResponse({"error": "Invalid response from OpenAI"}, status=500)
 
-# # Load environment variables
-# load_dotenv()
-# OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+            # ✅ Encode audio as base64
+            audio_base64 = base64.b64encode(audio_data).decode('utf-8')
 
-# @api_view(['POST'])
-# def generate_text(request):
-#     if 'pdf' not in request.FILES:
-#         return JsonResponse({"error": "No PDF uploaded"}, status=400)
+            return JsonResponse({"audio": audio_base64})
 
-#     pdf_file = request.FILES['pdf']
-#     file_path = default_storage.save(pdf_file.name, ContentFile(pdf_file.read()))
+        except AuthenticationError:
+            return JsonResponse({"error": "Invalid OpenAI API Key"}, status=401)
+        except RateLimitError:
+            return JsonResponse({"error": "Rate limit exceeded. Try again later."}, status=429)
+        except OpenAIError as e:
+            return JsonResponse({"error": f"OpenAI API error: {str(e)}"}, status=500)
+        except Exception as e:
+            return JsonResponse({"error": f"Server error: {str(e)}"}, status=500)
 
-#     try:
-#         extracted_text = extract_text(file_path)
-#         os.remove(file_path)  # Clean up file
-
-#         prompt = f"Summarize this document:\n\n{extracted_text}"
-        
-#         response = openai.ChatCompletion.create(
-#             model="gpt-4",
-#             messages=[{"role": "system", "content": "You are an AI summarization assistant."},
-#                       {"role": "user", "content": prompt}],
-#             max_tokens=500
-#         )
-
-#         generated_text = response["choices"][0]["message"]["content"]
-
-#         return JsonResponse({"generated_text": generated_text})
-
-#     except Exception as e:
-#         return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request"}, status=400)
