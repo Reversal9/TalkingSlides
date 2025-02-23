@@ -1,24 +1,29 @@
 # TalkingSlides
 
 ![Alt text](frontend/public/logo.PNG)
+## Inspiration
+Students spend a significant portion of their day commuting, walking, or engaging in tasks that make traditional studying difficult. Talking Slides was created to help them learn on the go, transforming study materials into easily digestible audio. By enabling students to listen to lectures, notes, or presentations anytime, they can maximize productivity without sacrificing balance. This approach allows for a more flexible learning experience, helping them stay prepared while also freeing up time for other aspects of life. With Talking Slides, students can stay ahead—anytime, anywhere.
 
-## Inspiration  
-In an era where access to quality education is more crucial than ever, we recognized a gap in how students review lecture materials when they miss class. Whether due to unforeseen circumstances, emergencies, or scheduling conflicts, students often struggle to catch up on missed lectures effectively. Our team was inspired to create a tool that transforms static lecture slides into engaging video lectures, ensuring that no student is left behind in their learning journey.  
+## What it does
+Talking Slides transforms PDFs into podcast-style audio, allowing students to listen, learn, and stay prepared on the go. Users can upload a PDF, generate an AI-powered script, and convert it into speech using a selection of voices—or even multiple voices at once for a dynamic experience! Students can listen directly on the web app or download the audio for offline use, empowering every moment to become a launchpad for academic excellence and personal growth.
 
-## What it does  
-Our application allows students to upload lecture slides and supplement them with synthesized speech and AI-generated video, creating a dynamic video lecture experience. Users can input an image of a professor or a preferred avatar, and our system will generate a realistic video presentation that aligns with the lecture content. This tool enhances comprehension by mimicking real lecture delivery, including voice modulation and visual engagement.  
+## How we built it
+Talking Slides transforms PDFs into audio-based presentations or podcasts, enabling students to learn on the go. The backend, powered by Django and Django REST Framework (DRF), handles authentication, API endpoints, and seamless frontend communication. MongoDB (via Djongo and Pymongo) provides flexible document storage, while GridFS efficiently manages large files like PDFs, videos, and audio. Redis caching optimizes performance by reducing redundant queries.
 
-## How we built it  
-We developed the backend using Django to manage data processing and AI-driven video synthesis. The frontend is built with React, ensuring a seamless and user-friendly experience. For speech generation, we integrate advanced text-to-speech models, while deep learning techniques power the avatar animation. Additionally, we incorporate OCR (Optical Character Recognition) to extract text from lecture slides and synchronize it with the generated video content.  
+The frontend, built with React, integrates React Router for navigation and Framer Motion for smooth animations. Axios manages API calls, and Auth0 ensures secure authentication. OpenAI's API powers text-to-speech conversion, while PyMuPDF (Fitz) extracts and processes PDF content.
 
-## Challenges we ran into  
-One of the main challenges was ensuring natural-looking video synthesis that aligns well with speech and lecture content. Another hurdle was processing and structuring lecture slides to create coherent video sequences without requiring extensive manual input from users. Optimizing AI models for efficiency without sacrificing quality was also a key technical challenge.  
+Gunicorn handles concurrent requests for deployment, and python-dotenv secures environment variables. This modern, efficient stack ensures Talking Slides is scalable, performant, and user-friendly, making learning more accessible.
 
-## Accomplishments that we're proud of  
-We are proud to have developed a tool that democratizes access to lecture content, making learning more accessible and engaging. Our application successfully bridges the gap between static notes and immersive lectures, giving students an innovative way to review material even when they miss class.  
+## Challenges we ran into
 
-## What we learned  
-Through this project, we deepened our understanding of AI-driven media synthesis, real-time text processing, and interactive front-end development. We also learned how to design a system that balances automation with user customization, ensuring a flexible yet intuitive experience.  
 
-## What's next  
-Moving forward, we plan to refine our avatar generation models to support real-time lip-syncing for even more realistic presentations. Additionally, we aim to expand customization options, allowing users to select different speaking styles and voice tones. Our long-term vision is to integrate multilingual support, making our tool beneficial for students across diverse educational backgrounds.  
+## Accomplishments that we're proud of
+
+
+## What we learned
+
+
+## What's next for Talking Slides
+The next step for Talking Slides is launching a fully functional web and mobile app, making it truly accessible on the go. This will give students the flexibility to engage with their study materials anytime, anywhere—whether commuting, walking, or multitasking. As we scale, we’re also prioritizing security to ensure user data remains protected.
+
+Looking ahead, Talking Slides won’t just talk—it’ll move! Our ambitious goal is to go beyond audio and introduce a feature that generates educational videos from PDFs with a single click. Imagine turning your notes into a dynamic lecture, making missed classes a thing of the past. Life happens, but with Talking Slides, you’ll always be covered.
